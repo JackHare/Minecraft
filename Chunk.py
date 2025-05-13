@@ -14,7 +14,12 @@ class Chunk():
     def generate_chunks(self):
         for x in range(CHUNK_WIDTH):
             for y in range(CHUNK_HEIGHT):
-                self.blocks[y][x] = Block.Block(CHUNK_WIDTH * Block.BLOCK_SIZE, CHUNK_HEIGHT * Block.BLOCK_SIZE, 1)
+                block_type = 0
+                if y > 6:
+                    block_type = 1
+                if y > 7:
+                    block_type = 2
+                self.blocks[y][x] = Block.Block(CHUNK_WIDTH * Block.BLOCK_SIZE, CHUNK_HEIGHT * Block.BLOCK_SIZE, block_type)
 
     def render_chunk(self, screen):
         for y in range(CHUNK_HEIGHT):

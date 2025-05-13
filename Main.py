@@ -8,7 +8,7 @@ screen = pg.display.set_mode((width, height))
 pg.display.set_caption("Minecraft2d")
 screen.fill(background_colour)
 
-block = Block.Block(0, 0, 1)
+block = Block.Block(10, 0, 1)
 
 screen.blit(SpriteManager.load_sprite(block.block_type), block.rect)
 pg.display.flip()

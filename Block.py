@@ -12,7 +12,7 @@ class Block():
         self.height = BLOCK_SIZE
         self.block_type = block_type
 
-        self.image = SpriteManager.load_sprite(block_type)
+        self.image = SpriteManager.load_block_sprite(block_type)
         self.image = pygame.transform.scale(self.image, (self.width, self.height))
 
         self.rect = self.image.get_rect()

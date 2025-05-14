@@ -1,14 +1,17 @@
 from typing import Any
 
+import Block
+
+
 class Camera:
     """
     Represents a 2D camera system for managing a viewing area in a game or graphical
     application. The camera determines what portion of the game world is"""
     
     # Class constants for view dimensions
-    TILE_SIZE: int = 48
-    VIEW_TILES_WIDTH: int = 24
-    VIEW_TILES_HEIGHT: int = 16
+    TILE_SIZE: int = 64
+    VIEW_TILES_WIDTH: float = 1280/ Block.BLOCK_SIZE
+    VIEW_TILES_HEIGHT: float = 720 / Block.BLOCK_SIZE
     DEFAULT_VIEW_WIDTH: int = TILE_SIZE * VIEW_TILES_WIDTH
     DEFAULT_VIEW_HEIGHT: int = TILE_SIZE * VIEW_TILES_HEIGHT
 

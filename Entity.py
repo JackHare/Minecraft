@@ -15,6 +15,7 @@ class Entity:
         self.rect = self.image.get_rect()
         self.rect.x = x
         self.rect.y = y
+
         self.rect.width = self.width
         self.rect.height = self.width
 

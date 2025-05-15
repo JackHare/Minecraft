@@ -3,7 +3,10 @@ import SpriteManager
 from Entity import Entity
 import pygame as pg
 
-class Player(Entity):
+from Hitbox import Hitbox
+
+
+class Player(Hitbox):
     def __init__(self):
         super().__init__(0, 0, Block.BLOCK_SIZE * .6, Block.BLOCK_SIZE *1.8, "Player")
         self.image_copy = self.image.copy()

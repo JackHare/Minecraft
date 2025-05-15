@@ -45,7 +45,7 @@ class Game:
 
     def update(self):
         self.control_updates()
-        self.player.update(self.dt)
+        self.player.apply_change(self.chunk_list)
         self.camera.center_on_player(self.player)
 
 
@@ -63,13 +63,13 @@ class Game:
         self.dt = self.clock.tick() / 1000  # Convert milliseconds to seconds
         movement_speed = 600
         if self.keyboard.up or self.keyboard.w:
-            self.player.y -= movement_speed * self.dt
+            self.player.y_change -= movement_speed * self.dt
         if self.keyboard.down or self.keyboard.s:
-            self.player.y += movement_speed * self.dt
+            self.player.y_change += movement_speed * self.dt
         if self.keyboard.left or self.keyboard.a:
-            self.player.x -= movement_speed * self.dt
+            self.player.x_change -= movement_speed * self.dt
         if self.keyboard.right or self.keyboard.d:
-            self.player.x += movement_speed * self.dt
+            self.player.x_change += movement_speed * self.dt
 
 
 

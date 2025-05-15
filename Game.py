@@ -11,9 +11,11 @@ from Player import Player
 class Game:
     def __init__(self):
 
-        # Initialize all fonts for text rendering
         self.dt = None
+
+        # Initialize all fonts for text rendering
         pg.font.init()
+
 
         # Init a camera object
         self.camera = Camera()

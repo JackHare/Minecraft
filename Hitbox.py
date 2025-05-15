@@ -23,3 +23,6 @@ class Hitbox(Entity):
         self.friction()
         self.x += self.x_vel
         self.y += self.y_vel
+
+    def collision(self):
+        pass

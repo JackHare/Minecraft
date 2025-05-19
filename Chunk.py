@@ -21,7 +21,8 @@ class Chunk():
     def generate_chunks(self):
         for x in range(CHUNK_WIDTH):
 
-            height = int(8 + math.sin(x * 0.5) * 2 + random.randint(-1, 1))
+            #height = int(8 + math.sin(x * 0.5) * 2 + random.randint(-1, 1))
+            height = int(8 + math.sin(x * 0.3) * 1 + random.uniform(-0.5, 0.5))
 
             for y in range(CHUNK_HEIGHT):
                 # Generate air block by default

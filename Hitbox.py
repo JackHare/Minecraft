@@ -22,8 +22,9 @@ class Hitbox(Entity):
     """ Applies the x and y change to x and y, if the change puts its inside of a block it doesnt do it, and moves it against the hit box of the block"""
     def apply_change(self, chunk_list):
 
-
-        self.chunk_x, self.chunk_y = math.floor(self.x / Block.BLOCK_SIZE), math.floor(self.y / Block.BLOCK_SIZE)
+        absolute_x = self.x
+        self.chunk_x = math.floor((absolute_x % (CHUNK_WIDTH * Block.BLOCK_SIZE)) / Block.BLOCK_SIZE)
+        self.chunk_y = math.floor(self.y / Block.BLOCK_SIZE)
         chunk_number = calculate_player_position(self)
         
         # Calculate if we are on the left or right edge of a chunk
@@ -52,17 +53,27 @@ class Hitbox(Entity):
                 # Determine which chunk to check based on position
                 current_chunk = center_chunk
                 if check_x < 0:
-                    check_x = CHUNK_WIDTH + check_x
-                    current_chunk = left_chunk
+                    if left_chunk:
+                        check_x = CHUNK_WIDTH + check_x
+                        current_chunk = left_chunk
                 elif check_x >= CHUNK_WIDTH:
-                    check_x = check_x - CHUNK_WIDTH
-                    current_chunk = right_chunk
+                    if right_chunk:
+                        check_x = check_x - CHUNK_WIDTH
+                        current_chunk = right_chunk
+                    else:
+                        continue
+                else:
+                    current_chunk = center_chunk
 
                 # Add block to list if it exists in the chunk
-                if 0 <= check_x < CHUNK_WIDTH and 0 <= check_y < CHUNK_HEIGHT:
+                if 0 <= check_x < CHUNK_WIDTH and 0 <= check_y < CHUNK_HEIGHT and current_chunk:
                     block = current_chunk.blocks[check_y][check_x]
-                    if block is not None and block.block_type != 0 and self.check_collision(block, self.x_change, self.y_change):
-                        block_list.append(block)
+                    if block is not None and block.block_type != 0:
+                        # Adjust block's absolute position based on chunk
+                        block.x = (current_chunk.position * CHUNK_WIDTH * Block.BLOCK_SIZE) + (
+                                    check_x * Block.BLOCK_SIZE)
+                        if self.check_collision(block, self.x_change, self.y_change):
+                            block_list.append(block)
 
         # Resolve collisions
         for block in block_list:

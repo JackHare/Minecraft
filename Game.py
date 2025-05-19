@@ -6,7 +6,7 @@ from Chunk import Chunk, CHUNK_WIDTH, calculate_player_position
 from Drawer import Drawer
 from Keyboard import Keyboard
 from Player import Player
-
+from Gravity import Gravity
 
 class Game:
     def __init__(self):
@@ -17,6 +17,7 @@ class Game:
 
         # Init a camera object
         self.camera = Camera()
+
 
 
         # Init a renderer object
@@ -35,6 +36,7 @@ class Game:
         # Create our clock object
         self.clock = pg.time.Clock()
 
+        self.gravity = Gravity(self.player, self)
 
         # Tracks game fps
         self.fps = 0
@@ -60,14 +62,14 @@ class Game:
     def control_updates(self):
         self.dt = self.clock.tick() / 1000  # Convert milliseconds to seconds
         movement_speed = 600
+
         if self.keyboard.up or self.keyboard.w:
-            self.player.y_change -= movement_speed * self.dt
-        if self.keyboard.down or self.keyboard.s:
-            self.player.y_change += movement_speed * self.dt
+            self.gravity.jump()
         if self.keyboard.left or self.keyboard.a:
             self.player.x_change -= movement_speed * self.dt
         if self.keyboard.right or self.keyboard.d:
             self.player.x_change += movement_speed * self.dt
+        self.gravity.apply_gravity(self.dt)
 
 
 

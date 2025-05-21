@@ -16,7 +16,7 @@ class Gravity():
         self.game = game
         self.vertical_velocity = 0
         self.is_grounded = False
-        self.can_jump = True
+        self.can_jump = False
 
     def apply_gravity(self, dt):
         if not self.is_grounded:
@@ -24,12 +24,11 @@ class Gravity():
             self.vertical_velocity = min(self.vertical_velocity, self.TERMINAL_VELOCITY)
             self.player.y_change += self.vertical_velocity * dt
 
-    def jump(self):
-        if self.vertical_velocity >= 0:
-            self.is_grounded = True
-            self.can_jump = True
+        else:
+                self.vertical_velocity = -375.0
+                self.is_grounded = False
 
-        if self.is_grounded and self.can_jump:
-            self.vertical_velocity = -375.0
-            self.is_grounded = False
-            self.can_jump = False
+    def jump(self, dt):
+        self.is_grounded = True
+        self.can_jump = True
+        self.apply_gravity(dt)

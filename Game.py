@@ -64,7 +64,7 @@ class Game:
         movement_speed = 600
 
         if self.keyboard.up or self.keyboard.w:
-            self.gravity.jump()
+            self.gravity.jump(self.dt)
         if self.keyboard.left or self.keyboard.a:
             self.player.x_change -= movement_speed * self.dt
         if self.keyboard.right or self.keyboard.d:

@@ -1,6 +1,6 @@
 from typing import Any
 
-import Block
+from world import Block
 
 
 class Camera:
@@ -10,7 +10,7 @@ class Camera:
     
     # Class constants for view dimensions
     TILE_SIZE: int = 64
-    VIEW_TILES_WIDTH: float = 1280/ Block.BLOCK_SIZE
+    VIEW_TILES_WIDTH: float = 1280 / Block.BLOCK_SIZE
     VIEW_TILES_HEIGHT: float = 720 / Block.BLOCK_SIZE
     DEFAULT_VIEW_WIDTH: int = TILE_SIZE * VIEW_TILES_WIDTH
     DEFAULT_VIEW_HEIGHT: int = TILE_SIZE * VIEW_TILES_HEIGHT

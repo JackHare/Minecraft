@@ -1,6 +1,5 @@
-import Block
-import SpriteManager
-import pygame as pg
+from world import Block
+from rendering import SpriteManager
 import random
 import math
 

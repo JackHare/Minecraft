@@ -1,6 +1,6 @@
 import pygame as pg
 
-import SpriteManager
+from rendering import SpriteManager
 
 
 class Entity:

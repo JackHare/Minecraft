@@ -1,6 +1,3 @@
-import pygame
-import SpriteManager
-
 BLOCK_SIZE = 64
 
 class Block():

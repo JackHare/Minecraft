@@ -1,10 +1,8 @@
 import math
-from enum import nonmember
 
-import Block
-from Chunk import Chunk, CHUNK_WIDTH, CHUNK_HEIGHT, calculate_player_position
-from Entity import Entity
-
+from world import Block
+from world.Chunk import CHUNK_WIDTH, CHUNK_HEIGHT, calculate_player_position
+from entity.Entity import Entity
 
 GRAVITY = 9.8  # m/s^2, adjust as needed for your game's scale
 
@@ -19,8 +17,8 @@ class Hitbox(Entity):
         self.friction_coefficient = friction_coefficient
         self.grounded = True  # Add a grounded state
         
-    """ Applies the x and y change to x and y, if the change puts its inside of a block it doesnt do it, and moves it against the hit box of the block"""
-    def apply_change(self, chunk_list):
+    """ Updates the x and y change to x_change and y_change, if the change puts its inside of a block it doesnt do it, and moves it against the hit box of the block"""
+    def update_player_position(self, chunk_list):
 
         absolute_x = self.x
         self.chunk_x = math.floor((absolute_x % (CHUNK_WIDTH * Block.BLOCK_SIZE)) / Block.BLOCK_SIZE)
@@ -68,10 +66,10 @@ class Hitbox(Entity):
                 # Add block to list if it exists in the chunk
                 if 0 <= check_x < CHUNK_WIDTH and 0 <= check_y < CHUNK_HEIGHT and current_chunk:
                     block = current_chunk.blocks[check_y][check_x]
-                    if block is not None and block.block_type != 0:
+                    if block is not None and block.block_type != 0 and block.block_type != 8 and block.block_type != 9:
                         # Adjust block's absolute position based on chunk
                         block.x = (current_chunk.position * CHUNK_WIDTH * Block.BLOCK_SIZE) + (
-                                    check_x * Block.BLOCK_SIZE)
+                                check_x * Block.BLOCK_SIZE)
                         if self.check_collision(block, self.x_change, self.y_change):
                             block_list.append(block)
 

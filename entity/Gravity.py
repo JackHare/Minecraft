@@ -1,8 +1,3 @@
-import pygame as pg
-import Player
-import Game
-import Entity
-
 '''
 Forces player to stay on ground but is able to jump
 '''

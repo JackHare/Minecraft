@@ -1,13 +1,30 @@
 
+from typing import Optional
+import pygame as pg
 
-def update_input(dt, keyboard, player, gravity, clock):
-    dt = clock.tick() / 1000  # Convert milliseconds to seconds
-    movement_speed = 600
-    print(gravity.vertical_velocity)
-    if keyboard.up or keyboard.w and gravity.vertical_velocity == 0:
+# Movement constants
+MOVEMENT_SPEED = 600  # Player movement speed in pixels per second
+
+def update_input(dt: float, keyboard: 'Keyboard', player: 'Player', gravity: 'Gravity') -> None:
+    """
+    Process input and update player movement and physics.
+
+    This function handles keyboard input for player movement and applies
+    gravity physics. It should be called once per frame.
+
+    Args:
+        dt: Delta time in seconds since the last frame.
+        keyboard: The keyboard input handler.
+        player: The player entity to update.
+        gravity: The gravity physics component for the player.
+    """
+    # Process player movement based on keyboard input
+    if keyboard.up or (keyboard.w and gravity.vertical_velocity == 0):
         gravity.jump(dt)
     if keyboard.left or keyboard.a:
-        player.x_change -= movement_speed * dt
+        player.x_change -= MOVEMENT_SPEED * dt
     if keyboard.right or keyboard.d:
-        player.x_change += movement_speed * dt
+        player.x_change += MOVEMENT_SPEED * dt
+
+    # Apply gravity physics
     gravity.apply_gravity(dt)

@@ -74,8 +74,6 @@ class Game:
 
 
 
-
-
     # Loop over the game
     def main_loop(self):
         while True:

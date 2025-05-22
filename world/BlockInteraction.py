@@ -104,7 +104,7 @@ class BlockInteraction:
         return distance_in_blocks <= BlockInteraction.MAX_REACH
 
     @staticmethod
-    def break_block(mouse_x: int, mouse_y: int, camera: Any, chunk_list: List[Any], player: Any) -> bool:
+    def break_block(mouse_x: int, mouse_y: int, camera: Any, chunk_list: List[Any], player: Any) -> int:
         """
         Break the block at the specified screen position.
 
@@ -116,18 +116,21 @@ class BlockInteraction:
             player: The player entity.
 
         Returns:
-            True if a block was broken, False otherwise.
+            The block type that was broken, or 0 (AIR) if no block was broken.
         """
         # Get the block at the mouse position
         block, chunk, block_x, block_y = BlockInteraction.get_block_at_position(mouse_x, mouse_y, camera, chunk_list)
 
-        # If no block is found or the block is air, return False
+        # If no block is found or the block is air, return AIR
         if not block or not chunk or block.block_type == AIR:
-            return False
+            return AIR
 
         # Check if the block is within reach of the player
         if not BlockInteraction.is_within_reach(player, block_x, block_y, chunk):
-            return False
+            return AIR
+
+        # Store the block type before breaking it
+        broken_block_type = block.block_type
 
         # Break the block by replacing it with air
         chunk.blocks[block_y][block_x] = Block(
@@ -136,7 +139,8 @@ class BlockInteraction:
             AIR
         )
 
-        return True
+        # Return the type of block that was broken
+        return broken_block_type
 
     @staticmethod
     def place_block(mouse_x: int, mouse_y: int, camera: Any, chunk_list: List[Any], player: Any, block_type: int) -> bool:

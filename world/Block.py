@@ -61,7 +61,7 @@ class Block:
         self.block_type = block_type
 
 
-def get_block_type(height: int, y: int, chunk_height: int = 128) -> int:
+def get_block_type(height: int, y: int, chunk_height: int = 256) -> int:
     """
     Determine the block type based on height and depth.
 
@@ -79,7 +79,7 @@ def get_block_type(height: int, y: int, chunk_height: int = 128) -> int:
     """
     block_type = AIR
 
-    if y > height + 3:
+    if y > height + 30:
         block_type = STONE
         # Generate ores based on depth and rarity
         if random.random() < ORE_GENERATION_CHANCE:
@@ -96,9 +96,9 @@ def get_block_type(height: int, y: int, chunk_height: int = 128) -> int:
             else:  # Coal layer (shallower)
                 if random.random() < COAL_CHANCE:
                     block_type = COAL
-    elif y > height:
+    elif y > height + 27:
         block_type = DIRT
-    elif y == height:
+    elif y == height + 27:
         block_type = GRASS
 
     return block_type

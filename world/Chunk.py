@@ -8,7 +8,7 @@ from rendering import SpriteManager
 
 # Number of blocks per chunk
 CHUNK_WIDTH = 64
-CHUNK_HEIGHT = 128
+CHUNK_HEIGHT = 256
 
 # Tree generation constants
 TREE_CHANCE = 0.2
@@ -48,7 +48,7 @@ class Chunk:
         This method creates the terrain by setting block types based on height
         and adds features like trees.
         """
-        for x in range(CHUNK_WIDTH):
+        for x in range( CHUNK_WIDTH):
             # Generate terrain height using smoother noise
             height = int(8 + math.sin((x + self.position * CHUNK_WIDTH) * 0.3) * 2 + random.uniform(-0.5, 0.5))
 
@@ -61,7 +61,7 @@ class Chunk:
 
             # Generate trees after terrain generation
             if x > 2 and x < CHUNK_WIDTH - 3 and random.random() < TREE_CHANCE:
-                self.place_tree(x, height)
+                self.place_tree(x, height + 27)
 
     def place_tree(self, x: int, y: int) -> None:
         """
@@ -101,7 +101,7 @@ class Chunk:
                                    current_block.block_type in [AIR, LEAVES]))
 
                 # Place leaf if valid position and within desired shape
-                if can_place_leaf and abs(leaf_x - x) + abs(leaf_y - leaf_start) < 4:
+                if can_place_leaf and abs(leaf_x - x) + abs(leaf_y - leaf_start) < 4 :
                     self.blocks[leaf_y][leaf_x] = Block(
                         leaf_x * BLOCK_SIZE + self.offset,
                         leaf_y * BLOCK_SIZE,

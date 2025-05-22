@@ -1,4 +1,4 @@
-
+from operator import truediv
 from typing import Optional
 import pygame as pg
 
@@ -19,7 +19,9 @@ def update_input(dt: float, keyboard: 'Keyboard', player: 'Player', gravity: 'Gr
         gravity: The gravity physics component for the player.
     """
     # Process player movement based on keyboard input
-    if keyboard.up or (keyboard.w and gravity.vertical_velocity == 0):
+    # Only allow jumping when the player is on the ground
+    print(player.grounded)
+    if (keyboard.up or keyboard.w or keyboard.space) and player.grounded is True  :
         gravity.jump(dt)
     if keyboard.left or keyboard.a:
         player.x_change -= MOVEMENT_SPEED * dt

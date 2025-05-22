@@ -82,6 +82,12 @@ class Hitbox(Entity):
         # Resolve collisions
         self._resolve_collisions(block_list)
 
+        for block in block_list:
+            if block.y >= self.y:
+                self.grounded = True
+            else:
+                self.grounded = False
+
         # Update position
         self.x = self.x_change
         self.y = self.y_change
@@ -169,6 +175,7 @@ class Hitbox(Entity):
         Args:
             block_list: A list of blocks that the entity is colliding with.
         """
+        self.grounded = False
         for block in block_list:
             # Calculate overlap in x and y axes
             x_overlap = min(self.x + self.width, block.x + block.width) - max(self.x, block.x)
@@ -183,8 +190,8 @@ class Hitbox(Entity):
             else:
                 if self.y < block.y:  # Collision from above
                     self.y_change = block.y - self.height
-                    self.grounded = True
                 else:  # Collision from below
+                    self.grounded = True
                     self.y_change = block.y + block.height
 
     def check_collision(self, block: Any, x: float, y: float) -> bool:

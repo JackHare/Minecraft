@@ -18,6 +18,7 @@ class Keyboard:
         a (bool): Whether the A key is pressed.
         s (bool): Whether the S key is pressed.
         d (bool): Whether the D key is pressed.
+        space (bool): Whether the space bar is pressed.
         key_1 (bool): Whether the 1 key is pressed.
         key_2 (bool): Whether the 2 key is pressed.
         key_3 (bool): Whether the 3 key is pressed.
@@ -37,6 +38,9 @@ class Keyboard:
         self.a = False
         self.s = False
         self.d = False
+
+        # Space bar
+        self.space = False
 
         # Number keys for block selection
         self.key_1 = False
@@ -85,3 +89,5 @@ class Keyboard:
             self.key_3 = handle
         elif event.key == pg.K_4:
             self.key_4 = handle
+        elif event.key == pg.K_SPACE:
+            self.space = handle

@@ -90,8 +90,11 @@ class Game:
         # Load or unload chunks as needed based on player position
         load_chunks(self.chunk_list, self.player)
 
+        # Get current mouse position for block highlighting
+        mouse_pos = (self.mouse.x, self.mouse.y)
+
         # Render the current frame
-        self.drawer.render_frame(self.player, self.chunk_list, self.fps, self.inventory)
+        self.drawer.render_frame(self.player, self.chunk_list, self.fps, self.inventory, mouse_pos)
 
         # Update FPS counter
         self.fps = int(self.clock.get_fps())
@@ -124,22 +127,38 @@ class Game:
         Handle block breaking and placing based on mouse input.
 
         This method checks for mouse clicks and calls the appropriate
-        BlockInteraction methods to break or place blocks.
+        BlockInteraction methods to break or place blocks. It also
+        manages the inventory, adding blocks when they're broken and
+        checking if the player has the block before placing it.
         """
         # Handle block breaking (right click)
         if self.mouse.right_click_event:
-            BlockInteraction.break_block(
+            # Try to break the block
+            block_type = BlockInteraction.break_block(
                 self.mouse.x, self.mouse.y,
                 self.camera, self.chunk_list, self.player
             )
 
+            # If a block was broken, add it to the inventory
+            if block_type and block_type != 0:  # 0 is AIR
+                self.inventory.add_block(block_type)
+
         # Handle block placing (left click)
         if self.mouse.left_click_event:
-            BlockInteraction.place_block(
-                self.mouse.x, self.mouse.y,
-                self.camera, self.chunk_list, self.player,
-                self.inventory.get_selected_block()
-            )
+            selected_block = self.inventory.get_selected_block()
+
+            # Only try to place the block if the player has it in their inventory
+            if selected_block != 0 and self.inventory.has_block(selected_block):
+                # Try to place the block
+                placed = BlockInteraction.place_block(
+                    self.mouse.x, self.mouse.y,
+                    self.camera, self.chunk_list, self.player,
+                    selected_block
+                )
+
+                # If the block was placed, remove it from the inventory
+                if placed:
+                    self.inventory.remove_block(selected_block)
 
     def main_loop(self) -> None:
         """

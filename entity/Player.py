@@ -25,7 +25,7 @@ class Player(Hitbox):
         and a height of 1.8 blocks.
         """
         # Create a player with a hitbox slightly smaller than the block size
-        super().__init__(0, 0, BLOCK_SIZE * 0.6, BLOCK_SIZE * 1.8, "Player")
+        super().__init__(0, 30 * BLOCK_SIZE, BLOCK_SIZE * 0.6, BLOCK_SIZE * 1.8, "Player")
 
         # Store a copy of the original image for flipping
         self.image_copy = self.image.copy()

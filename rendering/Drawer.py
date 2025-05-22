@@ -5,10 +5,111 @@ This module provides classes for rendering the game world, entities,
 and UI elements to the screen.
 """
 import pygame as pg
-from typing import List, Any, Tuple, Optional
+import random
+import math
+from typing import List, Any, Tuple, Optional, Dict
 
 from rendering import SpriteManager
 from world.Block import BLOCK_SIZE
+
+
+class Sky:
+    """
+    Manages the sky elements including sun and clouds.
+
+    This class handles the rendering and movement of sky elements
+    such as the sun and clouds, including parallax effects.
+
+    Attributes:
+        SUN_COLOR (Tuple[int, int, int]): The color of the sun (yellow).
+        SUN_SIZE (int): The size of the sun in pixels.
+        SUN_POSITION (Tuple[int, int]): The fixed position of the sun.
+        CLOUD_COLOR (Tuple[int, int, int]): The color of clouds (white).
+        CLOUD_COUNT (int): The number of clouds to generate.
+        clouds (List[Dict]): List of cloud data (position, size, speed).
+    """
+
+    # Sun settings
+    SUN_COLOR = (255, 255, 0)  # Yellow
+    SUN_SIZE = 120  # Size in pixels
+    SUN_POSITION = (200, 100)  # Fixed position (x, y)
+
+    # Cloud settings
+    CLOUD_COLOR = (255, 255, 255)  # White
+    CLOUD_COUNT = 10  # Number of clouds
+
+    def __init__(self, screen_width: int, screen_height: int) -> None:
+        """
+        Initialize the sky with sun and clouds.
+
+        Args:
+            screen_width: The width of the game window in pixels.
+            screen_height: The height of the game window in pixels.
+        """
+        self.screen_width = screen_width
+        self.screen_height = screen_height
+
+        # Generate random clouds
+        self.clouds = []
+        for _ in range(self.CLOUD_COUNT):
+            # Random cloud properties
+            width = random.randint(100, 300)
+            height = random.randint(0, 80)
+            x = random.randint(-width, screen_width)
+            y = random.randint(0, 400)
+            speed = random.uniform(10, 30)  # Pixels per second
+            parallax_factor = random.uniform(0.1, 1.0)  # Different depths for parallax
+
+            self.clouds.append({
+                'x': x,
+                'y': y,
+                'width': width,
+                'height': height,
+                'speed': speed,
+                'parallax_factor': parallax_factor,
+                'x_offset': x
+            })
+
+    def update(self, dt: float, camera_x: float) -> None:
+        """
+        Update cloud positions based on time and camera movement.
+
+        Args:
+            dt: Delta time in seconds since the last frame.
+            camera_x: The x-coordinate of the camera.
+        """
+        for cloud in self.clouds:
+            # Move clouds based on their speed
+            cloud['x_offset'] += cloud['speed'] * dt
+
+            # Apply parallax effect based on camera movement
+            cloud['x'] = cloud['x_offset'] + camera_x * 0.01 * cloud['parallax_factor']
+
+            # Wrap clouds around when they go off-screen
+            if cloud['x'] > self.screen_width:
+                cloud['x'] = -cloud['width']
+
+    def draw(self, screen: pg.Surface) -> None:
+        """
+            screen: The pygame surface to render to.
+        """
+        # Draw the sun (a yellow circle)
+      #  pg.draw.circle(screen, self.SUN_COLOR, self.SUN_POSITION, self.SUN_SIZE)
+        pg.draw.rect(screen, self.SUN_COLOR, (self.SUN_POSITION[0], self.SUN_POSITION[1], self.SUN_SIZE, self.SUN_SIZE), 0)
+        # Draw clouds (white rectangles)
+        for cloud in self.clouds:
+            pg.draw.rect(
+                screen,
+                self.CLOUD_COLOR,
+                (
+                    cloud['x'],
+                    cloud['y'],
+                    cloud['width'],
+                    cloud['height']
+                ),
+                0,  # Filled rectangle
+                border_radius=5  # Rounded corners for nicer clouds
+            )
 
 
 class Drawer:
@@ -76,11 +177,17 @@ class Drawer:
         # Set sky color
         self.screen.fill(self.BACKGROUND_COLOR)
 
+        # Initialize sky with sun and clouds
+        self.sky = Sky(self.SCREEN_WIDTH, self.SCREEN_HEIGHT)
+
         # Load sprites
         SpriteManager.load_block_sprites()
 
         # Set game font
         self.font = pg.font.Font(None, 36)
+
+        # Track time for animations
+        self.last_time = pg.time.get_ticks() / 1000.0
 
     def render_frame(self, player: Any, chunk_list: List[Any], fps: int, inventory: Optional[Any] = None, mouse_pos: Optional[Tuple[int, int]] = None) -> None:
         """
@@ -96,8 +203,17 @@ class Drawer:
             inventory: The inventory object containing the selected block.
             mouse_pos: The current mouse position (x, y) for block highlighting.
         """
+        # Calculate time delta for animations
+        current_time = pg.time.get_ticks() / 1000.0
+        dt = current_time - self.last_time
+        self.last_time = current_time
+
         # Clear the screen and draw background
         self.screen.fill(self.BACKGROUND_COLOR)
+
+        # Update and draw the sky
+        self.sky.update(dt, self.camera.x)
+        self.sky.draw(self.screen)
 
         # Loop over each chunk and render it
         for chunk in chunk_list:

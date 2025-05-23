@@ -1,5 +1,5 @@
 import pygame as pg
-from typing import List, Optional
+from typing import List, Optional, Dict
 
 from engine.Update import update_input
 from input.Event import poll_events
@@ -7,6 +7,7 @@ from rendering import SpriteManager
 from entity.Camera import Camera
 from world.Chunk import Chunk, calculate_player_position
 from rendering.Drawer import Drawer
+from rendering.CraftingMenu import CraftingMenu
 from input.Keyboard import Keyboard
 from input.Mouse import Mouse
 from entity.Player import Player
@@ -14,6 +15,7 @@ from entity.Gravity import Gravity
 from world.World import load_chunks
 from world.Inventory import Inventory
 from world.BlockInteraction import BlockInteraction
+from world import CraftingRecipes
 
 
 class Game:
@@ -65,6 +67,10 @@ class Game:
         # Create inventory for block selection
         self.inventory = Inventory()
 
+        # Initialize crafting menu
+        self.crafting_menu = CraftingMenu(self.drawer.SCREEN_WIDTH, self.drawer.SCREEN_HEIGHT)
+        self.crafting_menu_open = False
+
         # Tracks game fps
         self.fps: int = 0
 
@@ -81,6 +87,8 @@ class Game:
         # Handle block breaking and placing
         self.handle_block_interaction()
 
+        # No need to handle crafting menu events here, they will be handled in main_loop
+
         # Update player position based on physics and input
         self.player.update_player_position(self.chunk_list)
 
@@ -94,7 +102,14 @@ class Game:
         mouse_pos = (self.mouse.x, self.mouse.y)
 
         # Render the current frame
-        self.drawer.render_frame(self.player, self.chunk_list, self.fps, self.inventory, mouse_pos)
+        self.drawer.render_frame(
+            self.player, 
+            self.chunk_list, 
+            self.fps, 
+            self.inventory, 
+            mouse_pos,
+            self.crafting_menu if self.crafting_menu_open else None
+        )
 
         # Update FPS counter
         self.fps = int(self.clock.get_fps())
@@ -109,18 +124,37 @@ class Game:
         # Calculate delta time for this frame
         self.dt = self.clock.tick() / 1000  # Convert milliseconds to seconds
 
-        # Use the update_input function to handle player movement
-        update_input(self.dt, self.keyboard, self.player, self.gravity)
+        # Update keyboard state
+        self.keyboard.update()
 
-        # Handle inventory selection with number keys
-        if self.keyboard.key_1:
-            self.inventory.select_block(0)
-        elif self.keyboard.key_2:
-            self.inventory.select_block(1)
-        elif self.keyboard.key_3:
-            self.inventory.select_block(2)
-        elif self.keyboard.key_4:
-            self.inventory.select_block(3)
+        # Toggle crafting menu when E is pressed
+        print(self.keyboard.e_pressed)
+        if self.keyboard.e_pressed:
+            self.crafting_menu_open = not self.crafting_menu_open
+            # Update crafting menu when opened
+            if self.crafting_menu_open:
+                self.crafting_menu.update(self.inventory)
+
+        # Only process movement and inventory selection if crafting menu is closed
+        if not self.crafting_menu_open:
+            # Use the update_input function to handle player movement
+            update_input(self.dt, self.keyboard, self.player, self.gravity)
+
+            # Handle inventory selection with number keys
+            if self.keyboard.key_1:
+                self.inventory.select_block(0)
+            elif self.keyboard.key_2:
+                self.inventory.select_block(1)
+            elif self.keyboard.key_3:
+                self.inventory.select_block(2)
+            elif self.keyboard.key_4:
+                self.inventory.select_block(3)
+
+            if self.keyboard.a or self.keyboard.left:
+                self.player.facingLeft = True
+
+            if self.keyboard.d or self.keyboard.right:
+                self.player.facingLeft = False
 
     def handle_block_interaction(self) -> None:
         """
@@ -131,6 +165,10 @@ class Game:
         manages the inventory, adding blocks when they're broken and
         checking if the player has the block before placing it.
         """
+        # Skip block interaction if crafting menu is open
+        if self.crafting_menu_open:
+            return
+
         # Handle block breaking (right click)
         if self.mouse.right_click_event:
             # Try to break the block
@@ -168,8 +206,37 @@ class Game:
         and processing events each frame.
         """
         while True:
-            # Poll events (keyboard, mouse, window events)
-            poll_events(keyboard=self.keyboard, mouse=self.mouse)
+            # Reset mouse click events at the beginning of each frame
+            if self.mouse:
+                self.mouse.reset_click_events()
+
+            # Update mouse position
+            if self.mouse:
+                self.mouse.x, self.mouse.y = pg.mouse.get_pos()
+
+            # Process all events
+            for event in pg.event.get():
+                # Handle window close event
+                if event.type == pg.QUIT:
+                    pg.quit()
+                    quit()
+
+                # Handle keyboard events
+                if event.type == pg.KEYDOWN or event.type == pg.KEYUP:
+                    self.keyboard.handle_events(event)
+
+                # Handle mouse events
+                if event.type == pg.MOUSEBUTTONDOWN or event.type == pg.MOUSEBUTTONUP:
+                    self.mouse.handle_events(event)
+
+                # Handle crafting menu events when the menu is open
+                if self.crafting_menu_open and (event.type == pg.MOUSEMOTION or event.type == pg.MOUSEBUTTONDOWN):
+                    recipe = self.crafting_menu.handle_event(event)
+                    if recipe:
+                        # Craft the item
+                        if CraftingRecipes.craft_item(recipe, self.inventory):
+                            # Update the crafting menu after crafting
+                            self.crafting_menu.update(self.inventory)
 
             # Update the game
             self.update()

@@ -9,7 +9,7 @@ from typing import List, Any, Optional, Tuple
 
 import pygame as pg
 
-from world.Block import Block, AIR, BLOCK_SIZE
+from world.Block import Block, AIR, BLOCK_SIZE, BEDROCK, STONE, COBBLE_STONE
 from world.Chunk import CHUNK_WIDTH, CHUNK_HEIGHT
 
 
@@ -122,7 +122,7 @@ class BlockInteraction:
         block, chunk, block_x, block_y = BlockInteraction.get_block_at_position(mouse_x, mouse_y, camera, chunk_list)
 
         # If no block is found or the block is air, return AIR
-        if not block or not chunk or block.block_type == AIR:
+        if not block or not chunk or block.block_type == AIR or block.block_type == BEDROCK:
             return AIR
 
         # Check if the block is within reach of the player
@@ -131,6 +131,10 @@ class BlockInteraction:
 
         # Store the block type before breaking it
         broken_block_type = block.block_type
+
+        # If block was stone, give back cobble stone instead
+        if broken_block_type == STONE:
+            broken_block_type = COBBLE_STONE
 
         # Break the block by replacing it with air
         chunk.blocks[block_y][block_x] = Block(

@@ -15,6 +15,9 @@ GOLD = 6
 DIAMOND = 7
 OAK_LOG = 8
 LEAVES = 9
+BEDROCK = -1
+OAK_PLANK = 10
+COBBLE_STONE = 11
 
 # Ore generation probabilities
 ORE_GENERATION_CHANCE = 0.1
@@ -100,5 +103,8 @@ def get_block_type(height: int, y: int, chunk_height: int = 256) -> int:
         block_type = DIRT
     elif y == height + 27:
         block_type = GRASS
+
+    if y == 255:
+        block_type = BEDROCK
 
     return block_type

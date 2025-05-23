@@ -31,7 +31,8 @@ class Player(Hitbox):
         self.image_copy = self.image.copy()
 
         # Player starts facing left
-        self.facingLeft = True
+        self.stillFacingLeft = False
+        self.facingLeft = False
 
     def render(self, screen: pg.Surface, camera: Any) -> None:
         """
@@ -52,7 +53,10 @@ class Player(Hitbox):
         # Flip the player image if facing left
         if self.facingLeft:
             self.image = pg.transform.flip(self.image_copy, True, False)
-            self.image.set_colorkey((0, 0, 0))  # Make black transparent
+        else:
+            self.image = self.image_copy
 
+
+        self.image.set_colorkey((0, 0, 0))  # Make black transparent
         # Draw the player on the screen
         screen.blit(self.image, self.rect)

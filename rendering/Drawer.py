@@ -189,7 +189,7 @@ class Drawer:
         # Track time for animations
         self.last_time = pg.time.get_ticks() / 1000.0
 
-    def render_frame(self, player: Any, chunk_list: List[Any], fps: int, inventory: Optional[Any] = None, mouse_pos: Optional[Tuple[int, int]] = None) -> None:
+    def render_frame(self, player: Any, chunk_list: List[Any], fps: int, inventory: Optional[Any] = None, mouse_pos: Optional[Tuple[int, int]] = None, crafting_menu: Optional[Any] = None) -> None:
         """
         Draw a complete frame to the screen.
 
@@ -202,6 +202,7 @@ class Drawer:
             fps: The current frames per second to display.
             inventory: The inventory object containing the selected block.
             mouse_pos: The current mouse position (x, y) for block highlighting.
+            crafting_menu: The crafting menu to render, or None if the menu is closed.
         """
         # Calculate time delta for animations
         current_time = pg.time.get_ticks() / 1000.0
@@ -233,6 +234,10 @@ class Drawer:
         # Draw the FPS counter if enabled
         if self.DRAW_FPS:
             self.draw_fps(fps)
+
+        # Draw the crafting menu if provided
+        if crafting_menu:
+            crafting_menu.draw(self.screen)
 
         # Update the display
         pg.display.flip()
@@ -302,12 +307,12 @@ class Drawer:
         collected_blocks = inventory.get_collected_blocks()
         selected_block = inventory.get_selected_block()
 
-        if not collected_blocks:
-            return  # No blocks to display
+      #  if not collected_blocks:
+       #     return  # No blocks to display
 
         # Calculate hotbar dimensions
         block_size_with_spacing = self.INVENTORY_BLOCK_SIZE + self.INVENTORY_SPACING
-        hotbar_width = len(collected_blocks) * block_size_with_spacing + self.INVENTORY_SPACING
+        hotbar_width = 9 * block_size_with_spacing + self.INVENTORY_SPACING
         hotbar_height = self.INVENTORY_BLOCK_SIZE + self.INVENTORY_SPACING * 2
 
         # Calculate hotbar position (centered at bottom of screen)
@@ -360,3 +365,18 @@ class Drawer:
                     ),
                     self.INVENTORY_BORDER_WIDTH
                 )
+
+        for i in range(len(collected_blocks), 9):
+            border_color = self.INVENTORY_BORDER_COLOR
+
+            pg.draw.rect(
+                self.screen,
+                border_color,
+                (
+                    i * block_size_with_spacing + hotbar_x + self.INVENTORY_SPACING,
+                    hotbar_y + self.INVENTORY_SPACING,
+                    self.INVENTORY_BLOCK_SIZE,
+                    self.INVENTORY_BLOCK_SIZE
+                ),
+                self.INVENTORY_BORDER_WIDTH
+            )

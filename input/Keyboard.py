@@ -23,6 +23,8 @@ class Keyboard:
         key_2 (bool): Whether the 2 key is pressed.
         key_3 (bool): Whether the 3 key is pressed.
         key_4 (bool): Whether the 4 key is pressed.
+        e (bool): Whether the E key is pressed.
+        e_pressed (bool): Whether the E key was just pressed this frame.
     """
 
     def __init__(self) -> None:
@@ -47,6 +49,11 @@ class Keyboard:
         self.key_2 = False
         self.key_3 = False
         self.key_4 = False
+
+        # E key for crafting menu
+        self.e = False
+        self.e_pressed = False
+        self._e_was_pressed = False  # Track previous frame state
 
     def handle_events(self, event: pg.event.Event) -> None:
         """
@@ -91,3 +98,17 @@ class Keyboard:
             self.key_4 = handle
         elif event.key == pg.K_SPACE:
             self.space = handle
+        elif event.key == pg.K_e:
+            self.e = handle
+
+    def update(self) -> None:
+        """
+        Update the keyboard state for the current frame.
+
+        This method should be called once per frame to reset one-frame flags.
+        """
+        # Check if E was just pressed (is pressed now but wasn't pressed last frame)
+        self.e_pressed = self.e and not self._e_was_pressed
+
+        # Update the previous frame state for next frame
+        self._e_was_pressed = self.e

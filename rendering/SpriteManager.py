@@ -8,7 +8,7 @@ import pygame as pg
 from typing import Dict, Optional, Union
 
 from world.Block import BLOCK_SIZE, AIR, GRASS, DIRT, STONE, COAL, IRON, GOLD, DIAMOND, OAK_LOG, LEAVES, BEDROCK, \
-    OAK_PLANK, COBBLE_STONE, DIAMOND_BLOCK, GOLD_BLOCK, IRON_BLOCK, COAL_BLOCK
+    OAK_PLANK, COBBLE_STONE, DIAMOND_BLOCK, GOLD_BLOCK, IRON_BLOCK, COAL_BLOCK, POPPY, PUMPKIN
 
 # Dictionary to store loaded block sprites
 block_sprites: Dict[int, pg.Surface] = {}
@@ -31,7 +31,9 @@ SPRITE_PATHS = {
     DIAMOND_BLOCK: './rendering/sprites/diamond_block.png',
     GOLD_BLOCK: './rendering/sprites/gold_block.webp',
     IRON_BLOCK: './rendering/sprites/iron_block.jpg',
-    COAL_BLOCK: './rendering/sprites/coal_block.png'
+    COAL_BLOCK: './rendering/sprites/coal_block.png',
+    POPPY: './rendering/sprites/poppy.png',
+    PUMPKIN: './rendering/sprites/pumpkin.png'
 }
 
 # Entity sprite paths
@@ -49,11 +51,21 @@ def load_block_sprites() -> None:
     """
     for block_type, path in SPRITE_PATHS.items():
         try:
-            # Load and scale the sprite
-            block_sprites[block_type] = pg.transform.scale(
-                pg.image.load(path).convert(),
-                (BLOCK_SIZE, BLOCK_SIZE)
-            )
+            image = pg.image.load(path)
+
+            # Convert with alpha channel for transparency
+            if block_type == POPPY:
+                block_sprites[block_type] = pg.transform.scale(
+                    image.convert_alpha(),  # Use convert_alpha() for poppy
+                    (BLOCK_SIZE, BLOCK_SIZE)
+                )
+            else:
+                # For other block types, convert() might be slightly faster if they don't have transparency
+                block_sprites[block_type] = pg.transform.scale(
+                    image.convert(),
+                    (BLOCK_SIZE, BLOCK_SIZE)
+                )
+
         except Exception as e:
             print(f"Error loading sprite for block type {block_type}: {e}")
             # Create a fallback sprite (purple square for missing textures)

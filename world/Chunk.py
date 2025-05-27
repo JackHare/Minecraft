@@ -3,7 +3,7 @@ import math
 from typing import List, Union, Any, Optional
 import pygame as pg
 
-from world.Block import Block, BLOCK_SIZE, AIR, OAK_LOG, LEAVES
+from world.Block import Block, BLOCK_SIZE, AIR, OAK_LOG, LEAVES, POPPY, PUMPKIN
 from rendering import SpriteManager
 
 # Number of blocks per chunk
@@ -12,6 +12,8 @@ CHUNK_HEIGHT = 192
 
 # Tree generation constants
 TREE_CHANCE = 0.2
+POPPY_CHANCE = 0.03
+PUMPKIN_CHANCE = 0.03
 MIN_TREE_TRUNK_HEIGHT = 4
 MAX_TREE_TRUNK_HEIGHT = 6
 
@@ -72,6 +74,15 @@ class Chunk:
             # Generate trees after terrain generation
             if x > 2 and x < CHUNK_WIDTH - 3 and random.random() < TREE_CHANCE:
                 self.place_tree(x, height + 27)
+                continue
+
+            if random.random() < POPPY_CHANCE:
+                self.place_poppy(x, height + 27)
+                continue
+
+            if random.random() < PUMPKIN_CHANCE:
+                self.place_pumpkin(x, height + 27)
+                continue
 
     def place_tree(self, x: int, y: int) -> None:
         """
@@ -149,6 +160,12 @@ class Chunk:
                         SpriteManager.get_block_sprite(block_type),
                         (block_x, block_y),
                     )
+
+    def place_poppy(self, x: int, y: int):
+        self.blocks[y][x] = Block(x * BLOCK_SIZE + self.offset, y * BLOCK_SIZE, POPPY)
+
+    def place_pumpkin(self, x, y):
+        self.blocks[y][x] = Block(x * BLOCK_SIZE + self.offset, y * BLOCK_SIZE, PUMPKIN )
 
 
 def calculate_player_position(player: Any) -> int:

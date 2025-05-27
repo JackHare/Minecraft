@@ -7,7 +7,7 @@ and physics interactions between entities and the game world.
 import math
 from typing import List, Any, Optional, Tuple
 
-from world.Block import BLOCK_SIZE, AIR, OAK_LOG, LEAVES
+from world.Block import BLOCK_SIZE, AIR, OAK_LOG, LEAVES, POPPY
 from world.Chunk import CHUNK_WIDTH, CHUNK_HEIGHT, calculate_player_position
 from entity.Entity import Entity
 
@@ -156,7 +156,7 @@ class Hitbox(Entity):
 
                 # Get the block and check if it's solid
                 block = current_chunk.blocks[check_y][check_x]
-                if block is None or block.block_type in (AIR, OAK_LOG, LEAVES):
+                if block is None or block.block_type in (AIR, OAK_LOG, LEAVES, POPPY):
                     continue
 
                 # Adjust block's absolute position based on chunk

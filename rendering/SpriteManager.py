@@ -8,7 +8,8 @@ import pygame as pg
 from typing import Dict, Optional, Union
 
 from world.Block import BLOCK_SIZE, AIR, GRASS, DIRT, STONE, COAL, IRON, GOLD, DIAMOND, OAK_LOG, LEAVES, BEDROCK, \
-    OAK_PLANK, COBBLE_STONE, DIAMOND_BLOCK, GOLD_BLOCK, IRON_BLOCK, COAL_BLOCK, POPPY, PUMPKIN
+    OAK_PLANK, COBBLE_STONE, DIAMOND_BLOCK, GOLD_BLOCK, IRON_BLOCK, COAL_BLOCK, POPPY, PUMPKIN, ANDESITE, GRANITE, \
+    DIORITE
 
 # Dictionary to store loaded block sprites
 block_sprites: Dict[int, pg.Surface] = {}
@@ -33,7 +34,10 @@ SPRITE_PATHS = {
     IRON_BLOCK: './rendering/sprites/iron_block.jpg',
     COAL_BLOCK: './rendering/sprites/coal_block.png',
     POPPY: './rendering/sprites/poppy.png',
-    PUMPKIN: './rendering/sprites/pumpkin.png'
+    PUMPKIN: './rendering/sprites/pumpkin.png',
+    ANDESITE: './rendering/sprites/andesite.png',
+    GRANITE: './rendering/sprites/granite.webp',
+    DIORITE: './rendering/sprites/diorite.webp'
 }
 
 # Entity sprite paths

@@ -24,12 +24,16 @@ IRON_BLOCK = 14
 COAL_BLOCK = 15
 POPPY = 16
 PUMPKIN = 17
+ANDESITE = 18
+GRANITE = 19
+DIORITE = 20
 
 # Ore vein size ranges
 COAL_VEIN_SIZE = (9, 20)
 IRON_VEIN_SIZE = (3, 12)
 GOLD_VEIN_SIZE = (3, 12)
 DIAMOND_VEIN_SIZE = (1, 9)
+ANDESITE_VEIN_SIZE = (9, 20)
 
 # Ore generation probabilities (chance to start a vein)
 ORE_GENERATION_CHANCE = 0.01
@@ -37,12 +41,14 @@ COAL_CHANCE = 0.4
 IRON_CHANCE = 0.3
 GOLD_CHANCE = 0.25
 DIAMOND_CHANCE = 0.15
+ANDESITE_CHANCE = 0.4
 
 # Depth thresholds for ore generation
 COAL_DEPTH = 0.0  # Any depth
 IRON_DEPTH = 0.4
 GOLD_DEPTH = 0.6
 DIAMOND_DEPTH = 0.8
+ANDESITE_DEPTH = 0.0
 
 
 class Block:
@@ -209,9 +215,22 @@ def place_ore_veins(chunk: Any, chunk_height: int) -> None:
                 elif depth > IRON_DEPTH and r < DIAMOND_CHANCE + GOLD_CHANCE + IRON_CHANCE:
                     ore_type = IRON
                     vein_size = IRON_VEIN_SIZE
+
                 else:  # Coal layer (shallower)
                     ore_type = COAL
                     vein_size = COAL_VEIN_SIZE
+
+                if depth > ANDESITE_DEPTH and random.random() < ANDESITE_CHANCE:
+                    ore_type = ANDESITE
+                    vein_size = ANDESITE_VEIN_SIZE
+
+                if depth > ANDESITE_DEPTH and random.random() < ANDESITE_CHANCE:
+                    ore_type = GRANITE
+                    vein_size = ANDESITE_VEIN_SIZE
+
+                if depth > ANDESITE_DEPTH and random.random() < ANDESITE_CHANCE:
+                        ore_type = DIORITE
+                        vein_size = ANDESITE_VEIN_SIZE
 
                 if ore_type and vein_size:
                     generate_ore_vein(chunk, ore_type, x, y, vein_size, chunk_height)

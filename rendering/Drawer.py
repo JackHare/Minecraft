@@ -10,7 +10,7 @@ import math
 from typing import List, Any, Tuple, Optional, Dict
 
 from rendering import SpriteManager
-from world.Block import BLOCK_SIZE
+from world.Block import BLOCK_SIZE, GRASS
 
 
 class Sky:
@@ -172,6 +172,7 @@ class Drawer:
             (self.SCREEN_WIDTH, self.SCREEN_HEIGHT), 
             vsync=1
         )
+
         pg.display.set_caption(self.WINDOW_TITLE)
 
         # Set sky color
@@ -182,6 +183,8 @@ class Drawer:
 
         # Load sprites
         SpriteManager.load_block_sprites()
+
+        pg.display.set_icon(SpriteManager.block_sprites[GRASS])
 
         # Set game font
         self.font = pg.font.Font(None, 36)

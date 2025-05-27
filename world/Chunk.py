@@ -8,7 +8,7 @@ from rendering import SpriteManager
 
 # Number of blocks per chunk
 CHUNK_WIDTH = 64
-CHUNK_HEIGHT = 256
+CHUNK_HEIGHT = 192
 
 # Tree generation constants
 TREE_CHANCE = 0.2
@@ -46,9 +46,10 @@ class Chunk:
         Generate the terrain in the chunk.
 
         This method creates the terrain by setting block types based on height
-        and adds features like trees.
+        and adds features like ore veins and trees.
         """
-        for x in range( CHUNK_WIDTH):
+        # First pass: Generate basic terrain (stone, dirt, grass, bedrock)
+        for x in range(CHUNK_WIDTH):
             # Generate terrain height using smoother noise
             height = int(8 + math.sin((x + self.position * CHUNK_WIDTH) * 0.3) * 2 + random.uniform(-0.5, 0.5))
 
@@ -58,6 +59,15 @@ class Chunk:
                 block_type = get_block_type(height, y, CHUNK_HEIGHT)
 
                 self.blocks[y][x] = Block(x * BLOCK_SIZE + self.offset, y * BLOCK_SIZE, block_type)
+
+        # Second pass: Generate ore veins
+        from world.Block import place_ore_veins
+        place_ore_veins(self, CHUNK_HEIGHT)
+
+        # Third pass: Generate trees
+        for x in range(CHUNK_WIDTH):
+            # Get the height at this x-coordinate
+            height = int(8 + math.sin((x + self.position * CHUNK_WIDTH) * 0.3) * 2 + random.uniform(-0.5, 0.5))
 
             # Generate trees after terrain generation
             if x > 2 and x < CHUNK_WIDTH - 3 and random.random() < TREE_CHANCE:

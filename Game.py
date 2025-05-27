@@ -18,6 +18,7 @@ from world.BlockInteraction import BlockInteraction
 from world import CraftingRecipes
 
 
+
 class Game:
     """
     Main game class that orchestrates all game components and the game loop.
@@ -149,6 +150,16 @@ class Game:
                 self.inventory.select_block(2)
             elif self.keyboard.key_4:
                 self.inventory.select_block(3)
+            elif self.keyboard.key_5:
+                self.inventory.select_block(4)
+            elif self.keyboard.key_6:
+                self.inventory.select_block(5)
+            elif self.keyboard.key_7:
+                self.inventory.select_block(6)
+            elif self.keyboard.key_8:
+                self.inventory.select_block(7)
+            elif self.keyboard.key_9:
+                self.inventory.select_block(8)
 
             if self.keyboard.a or self.keyboard.left:
                 self.player.facingLeft = True

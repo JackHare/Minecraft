@@ -49,6 +49,11 @@ class Keyboard:
         self.key_2 = False
         self.key_3 = False
         self.key_4 = False
+        self.key_5 = False
+        self.key_6 = False
+        self.key_7 = False
+        self.key_8 = False
+        self.key_9 = False
 
         # E key for crafting menu
         self.e = False
@@ -96,6 +101,16 @@ class Keyboard:
             self.key_3 = handle
         elif event.key == pg.K_4:
             self.key_4 = handle
+        elif event.key == pg.K_5:
+            self.key_5 = handle
+        elif event.key == pg.K_6:
+            self.key_6 = handle
+        elif event.key == pg.K_7:
+            self.key_7 = handle
+        elif event.key == pg.K_8:
+            self.key_8 = handle
+        elif event.key == pg.K_9:
+            self.key_9 = handle
         elif event.key == pg.K_SPACE:
             self.space = handle
         elif event.key == pg.K_e:

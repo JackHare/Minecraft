@@ -1,5 +1,6 @@
 from typing import Dict, List, Tuple, Any
-from world.Block import OAK_LOG, COBBLE_STONE, OAK_PLANK, STONE
+from world.Block import OAK_LOG, COBBLE_STONE, OAK_PLANK, STONE, IRON, IRON_BLOCK, GOLD, GOLD_BLOCK, DIAMOND_BLOCK, \
+    DIAMOND, COAL, COAL_BLOCK
 
 # Recipe format: {
 #   "name": "Recipe Name",
@@ -17,6 +18,26 @@ RECIPES = [
         "name": "Stone",
         "inputs": {COBBLE_STONE: 1},
         "output": (STONE, 1)
+    },
+    {
+        "name": "Iron Block",
+        "inputs": {IRON: 9},
+        "output": (IRON_BLOCK, 1)
+    },
+{
+        "name": "Gold Block",
+        "inputs": {GOLD: 9},
+        "output": (GOLD_BLOCK, 1)
+    },
+{
+        "name": "Diamond Block",
+        "inputs": {DIAMOND: 9},
+        "output": (DIAMOND_BLOCK, 1)
+    },
+{
+        "name": "Coal Block",
+        "inputs": {COAL: 9},
+        "output": (COAL_BLOCK, 1)
     }
 ]
 

@@ -129,7 +129,7 @@ class Game:
         self.keyboard.update()
 
         # Toggle crafting menu when E is pressed
-        print(self.keyboard.e_pressed)
+
         if self.keyboard.e_pressed:
             self.crafting_menu_open = not self.crafting_menu_open
             # Update crafting menu when opened
@@ -241,13 +241,16 @@ class Game:
                     self.mouse.handle_events(event)
 
                 # Handle crafting menu events when the menu is open
-                if self.crafting_menu_open and (event.type == pg.MOUSEMOTION or event.type == pg.MOUSEBUTTONDOWN):
+                if self.crafting_menu_open and event.type == pg.MOUSEBUTTONDOWN:
+
                     recipe = self.crafting_menu.handle_event(event)
+                    print(recipe)
+                    # Craft the item
                     if recipe:
-                        # Craft the item
-                        if CraftingRecipes.craft_item(recipe, self.inventory):
-                            # Update the crafting menu after crafting
-                            self.crafting_menu.update(self.inventory)
+                        # Use CraftingRecipes.craft_item to craft the item
+                        CraftingRecipes.craft_item(recipe, self.inventory)
+                        # Update the crafting menu to reflect the new inventory state
+                        self.crafting_menu.update(self.inventory)
 
             # Update the game
             self.update()

@@ -2,18 +2,15 @@
 Crafting menu module for the game.
 
 This module provides the CraftingMenu class for displaying and interacting
-with the crafting menu.
+with the crafting menu using pygame_menu.
 """
 import pygame as pg
 from typing import List, Dict, Tuple, Any, Optional, Callable
 import pygame_menu as pm
-import pygame_menu.themes as themes
+from pygame_menu.locals import ALIGN_LEFT, ALIGN_CENTER
 import pygame_menu.widgets as widgets
 
-
-
 from world import CraftingRecipes
-
 from rendering import SpriteManager
 from world.Block import BLOCK_SIZE
 
@@ -24,29 +21,16 @@ class CraftingMenu:
 
     This class is responsible for rendering the crafting menu, handling
     button interactions, and providing visual feedback for available recipes.
+    It uses pygame_menu for rendering and interaction.
 
     Attributes:
-        MENU_BACKGROUND_COLOR (Tuple[int, int, int, int]): The background color of the menu.
-        MENU_BORDER_COLOR (Tuple[int, int, int]): The border color of the menu.
-        MENU_BORDER_WIDTH (int): The width of the menu border.
-        BUTTON_BACKGROUND_COLOR (Tuple[int, int, int]): The background color of buttons.
-        BUTTON_HOVER_COLOR (Tuple[int, int, int]): The background color of buttons when hovered.
-        BUTTON_DISABLED_COLOR (Tuple[int, int, int]): The background color of disabled buttons.
-        BUTTON_BORDER_COLOR (Tuple[int, int, int]): The border color of buttons.
-        BUTTON_BORDER_WIDTH (int): The width of button borders.
-        BUTTON_TEXT_COLOR (Tuple[int, int, int]): The color of button text.
-        BUTTON_TEXT_DISABLED_COLOR (Tuple[int, int, int]): The color of disabled button text.
-        TITLE_TEXT_COLOR (Tuple[int, int, int]): The color of the menu title.
         screen_width (int): The width of the game screen.
         screen_height (int): The height of the game screen.
         menu_width (int): The width of the crafting menu.
         menu_height (int): The height of the crafting menu.
-        menu_x (int): The x-coordinate of the crafting menu.
-        menu_y (int): The y-coordinate of the crafting menu.
-        font (pg.font.Font): The font used for text rendering.
-        title_font (pg.font.Font): The font used for the menu title.
-        buttons (List[Dict]): List of button data for recipe buttons.
+        menu (pm.Menu): The pygame_menu instance.
         inventory (Any): The player's inventory.
+        recipe_widgets (List[Dict]): List of widgets for each recipe.
     """
 
     # Menu appearance settings
@@ -66,6 +50,25 @@ class CraftingMenu:
     # Title appearance settings
     TITLE_TEXT_COLOR = (255, 255, 255)  # White
 
+    # Block type to name mapping
+    BLOCK_NAMES = {
+        1: "Grass",
+        2: "Dirt",
+        3: "Stone",
+        4: "Coal",
+        5: "Iron",
+        6: "Gold",
+        7: "Diamond",
+        8: "Oak Log",
+        9: "Oak Leaves",
+        10: "Oak Plank",
+        11: "Cobblestone",
+        12: "Diamond Block",
+        13: "Gold Block",
+        14: "Iron Block",
+        15: "Coal Block"
+    }
+
     def __init__(self, screen_width: int, screen_height: int) -> None:
         """
         Initialize the crafting menu.
@@ -78,28 +81,134 @@ class CraftingMenu:
         self.screen_height = screen_height
 
         # Set menu dimensions (centered on screen)
-        self.menu_width = 400
-        self.menu_height = 300
-        self.menu_x = (screen_width - self.menu_width) // 2
-        self.menu_y = (screen_height - self.menu_height) // 2
+        self.menu_width = 500
+        self.menu_height = 400
 
-        # Initialize fonts
-        self.font = pg.font.Font(None, 24)
-        self.title_font = pg.font.Font(None, 36)
-
-        # Initialize button list (will be populated in update)
-        self.buttons = []
+        # Create theme for the menu
+        self.theme = pm.themes.THEME_DARK.copy()
+        self.theme.background_color = self.MENU_BACKGROUND_COLOR
+        self.theme.title_background_color = (50, 50, 50)
+        self.theme.title_font_color = self.TITLE_TEXT_COLOR
+        self.theme.widget_font_color = self.BUTTON_TEXT_COLOR
+        self.theme.widget_font_size = 18
+        self.theme.title_font_size = 28
+        self.theme.widget_margin = (5, 5)
+        self.theme.scrollbar_color = self.BUTTON_BORDER_COLOR
+        self.theme.scrollbar_slider_color = self.BUTTON_HOVER_COLOR
+        self.theme.scrollbar_slider_hover_color = (180, 180, 180)
+        self.theme.scrollbar_thickness = 15
 
         # Store reference to inventory (will be set in update)
         self.inventory = None
 
-        # Scrolling attributes
-        self.scroll_offset = 0
-        self.scroll_speed = 20
-        self.content_height = 0
-        self.scroll_bar_width = 10
-        self.scroll_bar_color = (150, 150, 150)
-        self.scroll_bar_hover_color = (180, 180, 180)
+        # List to keep track of recipe widgets
+        self.recipe_widgets = []
+
+        # Track selected recipe
+        self._selected_recipe = None
+
+        # Initialize menu
+        self._setup_menu()
+
+    def _get_block_name(self, block_type: int) -> str:
+        """Get the display name for a block type."""
+        return self.BLOCK_NAMES.get(block_type, f"Block {block_type}")
+
+    def _create_recipe_button(self, recipe: Dict) -> None:
+        """
+        Create a button for a recipe.
+
+        Args:
+            recipe: The recipe dictionary to create a button for.
+        """
+        # Check if recipe can be crafted
+        can_craft = CraftingRecipes.can_craft(recipe, self.inventory)
+
+        # Get recipe data
+        recipe_name = recipe['name']
+        output_type, output_quantity = recipe['output']
+
+        # Create input requirements text
+        input_parts = []
+        for block_type, quantity in recipe['inputs'].items():
+            block_name = self._get_block_name(block_type)
+            input_parts.append(f"{quantity}x {block_name}")
+        input_text = ", ".join(input_parts)
+
+        # Create output text
+        output_name = self._get_block_name(output_type)
+        output_text = f"{output_quantity}x {output_name}"
+
+        # Create button text - keep it concise to fit better
+        button_text = f"{output_text}"
+
+
+        # Create the button
+        if can_craft:
+            button = self.menu.add.button(
+                button_text,
+                lambda: self._on_recipe_selected(recipe),  # Use _on_recipe_selected to handle crafting
+                font_size=18,
+                background_color=self.BUTTON_BACKGROUND_COLOR,
+                font_color=self.BUTTON_TEXT_COLOR,
+                padding=(10, 8, 10, 8),
+                margin=(0, 2)
+            )
+            # Add requirements as a separate label underneath
+            self.menu.add.label(
+                f"Needs: {input_text}",
+                font_size=14,
+                font_color=(200, 200, 200),
+                margin=(0, 0)
+            )
+        else:
+            # Disabled button for recipes that can't be crafted
+            button = self.menu.add.button(
+                button_text,
+                lambda: None,  # No action for disabled buttons
+                font_size=18,
+                background_color=self.BUTTON_DISABLED_COLOR,
+                font_color=self.BUTTON_TEXT_DISABLED_COLOR,
+                padding=(10, 8, 10, 8),
+                margin=(0, 2)
+            )
+            # Add requirements label for disabled recipes too
+            self.menu.add.label(
+                f"Needs: {input_text}",
+                font_size=14,
+                font_color=(120, 120, 120),
+                margin=(0, 0)
+            )
+            # Disable the button
+            button.is_selectable = False
+
+    def _on_recipe_selected(self, recipe: Dict) -> None:
+        """
+        Handle recipe selection and crafting.
+
+        Args:
+            recipe: The selected recipe dictionary.
+        """
+        # Check if recipe can still be crafted (materials available)
+        if not CraftingRecipes.can_craft(recipe, self.inventory):
+            return
+
+        # Get output block type and quantity
+        output_type, output_quantity = recipe['output']
+
+        # Check if inventory has space for the output
+        if not self.inventory.can_add(output_type, output_quantity):
+            return
+
+        # Remove input materials from inventory
+        for block_type, quantity in recipe['inputs'].items():
+            self.inventory.remove(block_type, quantity)
+
+        # Add crafted items to inventory
+        self.inventory.add(output_type, output_quantity)
+
+        # Store the selected recipe for reference
+        self._selected_recipe = recipe
 
     def update(self, inventory: Any) -> None:
         """
@@ -116,255 +225,78 @@ class CraftingMenu:
         # Get all recipes
         recipes = CraftingRecipes.get_all_recipes()
 
-        # Clear existing buttons
-        self.buttons = []
+        # Clear the menu
+        self.menu.clear()
+        self.recipe_widgets = []
 
-        # Create a button for each recipe
-        button_height = 60
-        button_spacing = 10
-        button_width = self.menu_width - 40 - self.scroll_bar_width  # 20px padding on each side
+        # Add recipes as buttons
+        for recipe in recipes:
+            self._create_recipe_button(recipe)
+            # Add a separator between recipes for better visual separation
+            if recipe != recipes[-1]:  # Don't add separator after last recipe
+                self.menu.add.vertical_margin(5)
 
-        for i, recipe in enumerate(recipes):
-            # Calculate button position
-            button_x = self.menu_x + 20
-            button_y = self.menu_y + 60 + (button_height + button_spacing) * i
-
-            # Check if recipe can be crafted
-            can_craft = CraftingRecipes.can_craft(recipe, inventory)
-
-            # Create button data
-            button = {
-                'rect': pg.Rect(button_x, button_y, button_width, button_height),
-                'recipe': recipe,
-                'can_craft': can_craft,
-                'hover': False
-            }
-
-            self.buttons.append(button)
-
-        # Calculate total content height
-        if self.buttons:
-            last_button = self.buttons[-1]
-            self.content_height = last_button['rect'].bottom - self.menu_y
+        # If no recipes available, show a message
+        if not recipes:
+            self.menu.add.label("No recipes available", font_size=20)
 
     def handle_event(self, event: pg.event.Event) -> Optional[Dict]:
         """
-        Handle mouse events for the crafting menu.
+        Handle events for the crafting menu.
 
         Args:
             event: The pygame event to handle.
 
         Returns:
-            The recipe that was clicked, or None if no recipe was clicked.
+            The recipe that was selected, or None if no recipe was selected.
         """
-        if event.type == pg.MOUSEMOTION:
-            # Update hover state for buttons
-            mouse_pos = pg.mouse.get_pos()
-            for button in self.buttons:
-                adjusted_rect = button['rect'].copy()
-                adjusted_rect.y -= self.scroll_offset
-                button['hover'] = adjusted_rect.collidepoint(mouse_pos)
+        # Only process events if menu is enabled
+        if not self.menu.is_enabled():
+            return None
 
-        elif event.type == pg.MOUSEBUTTONDOWN and event.button == 1:  # Left click
-            # Check if a button was clicked
-            mouse_pos = pg.mouse.get_pos()
-            for button in self.buttons:
-                adjusted_rect = button['rect'].copy()
-                adjusted_rect.y -= self.scroll_offset
-                if adjusted_rect.collidepoint(mouse_pos) and button['can_craft']:
-                    return button['recipe']
+        # Reset selected recipe at start of event handling
+        self._selected_recipe = None
 
-        elif event.type == pg.MOUSEWHEEL:
-            # Handle scrolling
-            self.scroll_offset = max(0, min(self.scroll_offset - event.y * self.scroll_speed,
-                                          max(0, self.content_height - (self.menu_height - 60))))
+        # Process menu events
+        if event.type in [pg.MOUSEBUTTONDOWN, pg.MOUSEBUTTONUP]:
+            self.menu.update([event])
+
+        # Return selected recipe if one was chosen
+        if self._selected_recipe is not None:
+            recipe = self._selected_recipe
+            self._selected_recipe = None
+            return recipe
 
         return None
 
     def draw(self, screen: pg.Surface) -> None:
-        # Create a surface for the menu background with room for the scrollbar
-        menu_surface = pg.Surface((self.menu_width, self.menu_height), pg.SRCALPHA)
-        menu_surface.fill(self.MENU_BACKGROUND_COLOR)
-
-        # Draw the menu background
-        screen.blit(menu_surface, (self.menu_x, self.menu_y))
-
-        # Create a surface for the content area
-        content_surface = pg.Surface((self.menu_width - self.scroll_bar_width, self.menu_height - 60), pg.SRCALPHA)
-        content_surface.fill((0, 0, 0, 0))  # Transparent background
-
-        # Draw each button onto the content surface
-        for button in self.buttons:
-            adjusted_rect = button['rect'].copy()
-            adjusted_rect.y -= self.scroll_offset
-            adjusted_rect.move_ip(0, -self.menu_y - 60)
-
-            # Skip buttons that are outside the visible area
-            if adjusted_rect.bottom < 0 or adjusted_rect.top > self.menu_height - 60:
-                continue
-
-            # Determine button color based on state
-            if not button['can_craft']:
-                bg_color = self.BUTTON_DISABLED_COLOR
-                text_color = self.BUTTON_TEXT_DISABLED_COLOR
-            elif button['hover']:
-                bg_color = self.BUTTON_HOVER_COLOR
-                text_color = self.BUTTON_TEXT_COLOR
-            else:
-                bg_color = self.BUTTON_BACKGROUND_COLOR
-                text_color = self.BUTTON_TEXT_COLOR
-
-            # Draw button background
-            pg.draw.rect(content_surface, bg_color, adjusted_rect)
-            pg.draw.rect(content_surface, self.BUTTON_BORDER_COLOR, adjusted_rect, self.BUTTON_BORDER_WIDTH)
-
-            # Get recipe data
-            recipe = button['recipe']
-            recipe_name = recipe['name']
-            output_type, output_quantity = recipe['output']
-
-            # Draw recipe name
-            name_text = self.font.render(recipe_name, True, text_color)
-            name_rect = name_text.get_rect(x=adjusted_rect.x + 10, y=adjusted_rect.y + 5)
-            content_surface.blit(name_text, name_rect)
-
-            # Draw input materials
-            input_text = "Requires: "
-            for block_type, quantity in recipe['inputs'].items():
-                input = ""
-                if block_type == 1:
-                    input = "Grass"
-                elif block_type == 2:
-                    input = "Dirt"
-                elif block_type == 3:
-                    input = "Stone"
-                elif block_type == 4:
-                    input = "Coal"
-                elif block_type == 5:
-                    input = "Iron"
-                elif block_type == 6:
-                    input = "Gold"
-                elif block_type == 7:
-                    input = "Diamond"
-                elif block_type == 8:
-                    input = "Oak Log"
-                elif block_type == 9:
-                    input = "Oak Leaves"
-                elif block_type == 10:
-                    input = "Oak Plank"
-                elif block_type == 11:
-                    input = "Cobblestone"
-                input_text += f"{quantity} x {input}, "
-            input_text = input_text[:-2]
-
-            inputs_text = self.font.render(input_text, True, text_color)
-            inputs_rect = inputs_text.get_rect(x=adjusted_rect.x + 10, y=adjusted_rect.y + 30)
-            content_surface.blit(inputs_text, inputs_rect)
-
-            # Draw output item
-            output_text = f"Creates: {output_quantity}"
-            outputs_text = self.font.render(output_text, True, text_color)
-            outputs_rect = outputs_text.get_rect(right=adjusted_rect.right - 10, centery=adjusted_rect.centery)
-            content_surface.blit(outputs_text, outputs_rect)
         """
         Draw the crafting menu to the screen.
 
         Args:
             screen: The pygame surface to render to.
         """
-        # Create a surface for the menu background
-        menu_surface = pg.Surface((self.menu_width, self.menu_height), pg.SRCALPHA)
-        menu_surface.fill(self.MENU_BACKGROUND_COLOR)
+        if self.menu.is_enabled():
+            self.menu.draw(screen)
 
-        # Draw the menu background
-        screen.blit(menu_surface, (self.menu_x, self.menu_y))
 
-        # Draw the menu border
-        pg.draw.rect(
-            screen,
-            self.MENU_BORDER_COLOR,
-            (self.menu_x, self.menu_y, self.menu_width, self.menu_height),
-            self.MENU_BORDER_WIDTH
+    def toggle(self) -> None:
+        """Toggle the crafting menu visibility."""
+        if self.menu.is_enabled():
+            self.menu.disable()
+        else:
+            self._setup_menu()
+            self.menu.enable()
+
+    def _setup_menu(self) -> None:
+        """Create and setup the crafting menu."""
+        self.menu = pm.Menu(
+            title='Crafting Menu',
+            width=self.menu_width,
+            height=self.menu_height,
+            theme=self.theme,
+            center_content=False,
+            overflow=True,  # Allow scrolling when content exceeds visible area
+            columns=1,
+            rows=None  # Allow unlimited rows with scrolling
         )
-        menu = pg.Menu(
-            title='Main Menu',
-            width=400,
-            height=400,
-            theme=themes.TRANSPARENT,
-            mouse_wheel_scroll=True,
-        )
-
-        # Draw the menu title
-        title_text = self.title_font.render("Crafting", True, self.TITLE_TEXT_COLOR)
-        title_rect = title_text.get_rect(centerx=self.menu_x + self.menu_width // 2, y=self.menu_y + 10)
-        screen.blit(title_text, title_rect)
-
-        # Draw each button
-        for button in self.buttons:
-            # Determine button color based on state
-            if not button['can_craft']:
-                bg_color = self.BUTTON_DISABLED_COLOR
-                text_color = self.BUTTON_TEXT_DISABLED_COLOR
-            elif button['hover']:
-                bg_color = self.BUTTON_HOVER_COLOR
-                text_color = self.BUTTON_TEXT_COLOR
-            else:
-                bg_color = self.BUTTON_BACKGROUND_COLOR
-                text_color = self.BUTTON_TEXT_COLOR
-
-            # Draw button background
-            pg.draw.rect(screen, bg_color, button['rect'])
-
-            # Draw button border
-            pg.draw.rect(screen, self.BUTTON_BORDER_COLOR, button['rect'], self.BUTTON_BORDER_WIDTH)
-
-            # Get recipe data
-            recipe = button['recipe']
-            recipe_name = recipe['name']
-            output_type, output_quantity = recipe['output']
-
-            # Draw recipe name
-            name_text = self.font.render(recipe_name, True, text_color)
-            name_rect = name_text.get_rect(x=button['rect'].x + 10, y=button['rect'].y + 5)
-            screen.blit(name_text, name_rect)
-
-            # Draw input materials
-
-
-            input_text = "Requires: "
-            for block_type, quantity in recipe['inputs'].items():
-                input = ""
-                if block_type == 1:
-                    input = "Grass"
-                elif block_type == 2:
-                    input = "Dirt"
-                elif block_type == 3:
-                    input = "Stone"
-                elif block_type == 4:
-                    input = "Coal"
-                elif block_type == 5:
-                    input = "Iron"
-                elif block_type == 6:
-                    input = "Gold"
-                elif block_type == 7:
-                    input = "Diamond"
-                elif block_type == 8:
-                    input = "Oak Log"
-                elif block_type == 9:
-                    input = "Oak Leaves"
-                elif block_type == 10:
-                    input = "Oak Plank"
-                elif block_type == 11:
-                    input = "Cobblestone"
-                input_text += f"{quantity} x {input}, "
-            input_text = input_text[:-2]  # Remove trailing comma and space
-
-            inputs_text = self.font.render(input_text, True, text_color)
-            inputs_rect = inputs_text.get_rect(x=button['rect'].x + 10, y=button['rect'].y + 30)
-            screen.blit(inputs_text, inputs_rect)
-
-            # Draw output item
-            output_text = f"Creates: {output_quantity}"
-            outputs_text = self.font.render(output_text, True, text_color)
-            outputs_rect = outputs_text.get_rect(right=button['rect'].right - 10, centery=button['rect'].centery)
-            screen.blit(outputs_text, outputs_rect)

@@ -7,7 +7,7 @@ block selection and inventory.
 from typing import Dict, List, Optional, Tuple
 
 from world.Block import GRASS, STONE, OAK_LOG, IRON, AIR, LEAVES, DIAMOND, GOLD, COAL, IRON_BLOCK, COAL_BLOCK, \
-    DIAMOND_BLOCK, GOLD_BLOCK, PUMPKIN, POPPY, WATER
+    DIAMOND_BLOCK, GOLD_BLOCK, PUMPKIN, POPPY, WATER, FURNACE
 from world.Block import GRASS, STONE, OAK_LOG, IRON, AIR, LEAVES, DIAMOND, GOLD, COAL, DIRT, OAK_PLANK, COBBLE_STONE
 
 
@@ -27,7 +27,7 @@ class Inventory:
 
     # List of block types that can be collected (grass, stone, log, iron)
 
-    AVAILABLE_BLOCKS = [GRASS, DIRT, STONE, OAK_LOG, IRON, LEAVES, COAL, GOLD, DIAMOND, OAK_PLANK, COBBLE_STONE, IRON_BLOCK, COAL_BLOCK, DIAMOND_BLOCK, GOLD_BLOCK, POPPY, PUMPKIN, WATER]
+    AVAILABLE_BLOCKS = [GRASS, DIRT, STONE, OAK_LOG, IRON, LEAVES, COAL, GOLD, DIAMOND, OAK_PLANK, COBBLE_STONE, IRON_BLOCK, COAL_BLOCK, DIAMOND_BLOCK, GOLD_BLOCK, POPPY, PUMPKIN, WATER, FURNACE]
 
     def __init__(self) -> None:
         """Initialize a new Inventory with no blocks collected."""

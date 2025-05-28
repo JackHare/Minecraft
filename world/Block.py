@@ -28,6 +28,7 @@ ANDESITE = 18
 GRANITE = 19
 DIORITE = 20
 WATER = 21
+FURNACE = 22
 
 # Ore vein size ranges
 COAL_VEIN_SIZE = (9, 20)

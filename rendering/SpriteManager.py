@@ -9,7 +9,7 @@ from typing import Dict, Optional, Union
 
 from world.Block import BLOCK_SIZE, AIR, GRASS, DIRT, STONE, COAL, IRON, GOLD, DIAMOND, OAK_LOG, LEAVES, BEDROCK, \
     OAK_PLANK, COBBLE_STONE, DIAMOND_BLOCK, GOLD_BLOCK, IRON_BLOCK, COAL_BLOCK, POPPY, PUMPKIN, ANDESITE, GRANITE, \
-    DIORITE, WATER
+    DIORITE, WATER, FURNACE
 
 # Dictionary to store loaded block sprites
 block_sprites: Dict[int, pg.Surface] = {}
@@ -38,7 +38,8 @@ SPRITE_PATHS = {
     ANDESITE: './rendering/sprites/andesite.png',
     GRANITE: './rendering/sprites/granite.webp',
     DIORITE: './rendering/sprites/diorite.webp',
-    WATER: './rendering/sprites/water.jpeg'
+    WATER: './rendering/sprites/water.jpeg',
+    FURNACE: './rendering/sprites/furnace.webp'
 }
 
 # Entity sprite paths

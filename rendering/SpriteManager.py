@@ -47,6 +47,9 @@ ENTITY_SPRITE_PATHS = {
     "Player": './rendering/sprites/steve.png'
 }
 
+ITEM_SPRITE_PATHS = {
+    "Coal": "./rendering/sprites/coal.png"
+}
 
 def load_block_sprites() -> None:
     """

@@ -7,7 +7,8 @@ and physics interactions between entities and the game world.
 import math
 from typing import List, Any, Optional, Tuple
 
-from world.Block import BLOCK_SIZE, AIR, OAK_LOG, LEAVES, POPPY
+from world.Block import Block
+from world.Block import BLOCK_SIZE, AIR, OAK_LOG, LEAVES, POPPY, WATER, GRASS, DIRT, STONE, COAL, IRON, GOLD, DIAMOND, COBBLE_STONE
 from world.Chunk import CHUNK_WIDTH, CHUNK_HEIGHT, calculate_player_position
 from entity.Entity import Entity
 
@@ -54,6 +55,7 @@ class Hitbox(Entity):
         self.mass = mass
         self.friction_coefficient = friction_coefficient
         self.grounded = True
+        self.in_water = False  # Track if the entity is in water
 
     def update_player_position(self, chunk_list: List[Any]) -> None:
         """
@@ -78,6 +80,9 @@ class Hitbox(Entity):
 
         # Find colliding blocks
         block_list = self._find_colliding_blocks(chunks_to_check)
+
+        # Check if player is in water
+        self.in_water = self._check_if_in_water(chunks_to_check)
 
         # Resolve collisions
         self._resolve_collisions(block_list)
@@ -156,7 +161,7 @@ class Hitbox(Entity):
 
                 # Get the block and check if it's solid
                 block = current_chunk.blocks[check_y][check_x]
-                if block is None or block.block_type in (AIR, OAK_LOG, LEAVES, POPPY):
+                if block is None or block.block_type in (AIR, OAK_LOG, LEAVES, POPPY, WATER):
                     continue
 
                 # Adjust block's absolute position based on chunk
@@ -211,3 +216,113 @@ class Hitbox(Entity):
                 x + self.width > block.x and
                 y < block.y + block.height and
                 y + self.height > block.y)
+
+    def _check_if_in_water(self, chunks: Tuple[Any, Any, Any]) -> bool:
+        """
+        Check if the entity is in water.
+
+        Args:
+            chunks: A tuple containing the left, center, and right chunks to check.
+
+        Returns:
+            True if the entity is in water, False otherwise.
+        """
+        left_chunk, center_chunk, right_chunk = chunks
+
+        # Calculate the player's feet position (bottom of hitbox)
+        feet_y = self.y + self.height - BLOCK_SIZE/2
+
+        # Check a small area around the player for water blocks
+        for dy in range(-1, 2):  # Check one block above and below feet
+            check_y = math.floor(feet_y / BLOCK_SIZE) + dy
+
+            # Skip if out of bounds
+            if not (0 <= check_y < CHUNK_HEIGHT):
+                continue
+
+            # Check blocks at player's horizontal position
+            check_x = self.chunk_x
+
+            # Determine which chunk to check
+            current_chunk = center_chunk
+            if check_x < 0:
+                if left_chunk:
+                    check_x = CHUNK_WIDTH + check_x
+                    current_chunk = left_chunk
+            elif check_x >= CHUNK_WIDTH:
+                if right_chunk:
+                    check_x = check_x - CHUNK_WIDTH
+                    current_chunk = right_chunk
+                else:
+                    continue
+
+            # Skip if out of bounds
+            if not (0 <= check_x < CHUNK_WIDTH):
+                continue
+
+            # Get the block and check if it's water
+            block = current_chunk.blocks[check_y][check_x]
+            if isinstance(block, Block) and block.block_type == WATER:
+                return True
+
+        return False
+
+    def get_surface_type(self, chunks: Tuple[Any, Any, Any]) -> str:
+        """
+        Determine the type of surface the entity is standing on.
+
+        Args:
+            chunks: A tuple containing the left, center, and right chunks to check.
+
+        Returns:
+            A string representing the surface type: "grass/dirt", "blocks", "stone", or empty string if not on a surface.
+        """
+        if not self.grounded:
+            return ""  # Not standing on any surface
+
+        left_chunk, center_chunk, right_chunk = chunks
+
+        # Calculate the player's feet position (bottom of hitbox)
+        feet_y = self.y + self.height + 1  # Just below the feet
+
+        # Check the block below the player's feet
+        check_y = math.floor(feet_y / BLOCK_SIZE)
+        check_x = self.chunk_x
+
+        # Skip if out of bounds
+        if not (0 <= check_y < CHUNK_HEIGHT):
+            return ""
+
+        # Determine which chunk to check
+        current_chunk = center_chunk
+        if check_x < 0:
+            if left_chunk:
+                check_x = CHUNK_WIDTH + check_x
+                current_chunk = left_chunk
+            else:
+                return ""
+        elif check_x >= CHUNK_WIDTH:
+            if right_chunk:
+                check_x = check_x - CHUNK_WIDTH
+                current_chunk = right_chunk
+            else:
+                return ""
+
+        # Skip if out of bounds
+        if not (0 <= check_x < CHUNK_WIDTH):
+            return ""
+
+        # Get the block below the player's feet
+        block = current_chunk.blocks[check_y][check_x]
+        if not isinstance(block, Block):
+            return ""
+
+        # Determine surface type based on block type
+        if block.block_type in [GRASS, DIRT]:
+            return "grass/dirt"
+        elif block.block_type in [DIAMOND, GOLD, IRON, COAL]:
+            return "blocks"
+        elif block.block_type in [STONE, COBBLE_STONE]:
+            return "stone"
+        else:
+            return ""

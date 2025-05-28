@@ -27,6 +27,7 @@ PUMPKIN = 17
 ANDESITE = 18
 GRANITE = 19
 DIORITE = 20
+WATER = 21
 
 # Ore vein size ranges
 COAL_VEIN_SIZE = (9, 20)
@@ -64,9 +65,10 @@ class Block:
         width (int): The width of the block in pixels.
         height (int): The height of the block in pixels.
         block_type (int): The type of the block, determining its appearance and behavior.
+        water_distance (int): For water blocks, the distance from the source (0 for source blocks).
     """
 
-    def __init__(self, x: float, y: float, block_type: int) -> None:
+    def __init__(self, x: float, y: float, block_type: int, water_distance: int = 0) -> None:
         """
         Initialize a new Block.
 
@@ -74,12 +76,14 @@ class Block:
             x: The x-coordinate of the block in the game world.
             y: The y-coordinate of the block in the game world.
             block_type: The type of the block (use block type constants).
+            water_distance: For water blocks, the distance from the source (0 for source blocks).
         """
         self.x = x
         self.y = y
         self.width = BLOCK_SIZE
         self.height = BLOCK_SIZE
         self.block_type = block_type
+        self.water_distance = water_distance
 
 
 def get_block_type(height: int, y: int, chunk_height: int = 192) -> int:

@@ -16,7 +16,8 @@ from world.World import load_chunks
 from world.Inventory import Inventory
 from world.BlockInteraction import BlockInteraction
 from world import CraftingRecipes
-
+from world.WaterSimulation import WaterSimulation
+from rendering.Sounds import Sounds
 
 
 class Game:
@@ -42,6 +43,8 @@ class Game:
         """Initialize the game and all its components."""
         # Initialize attributes that were previously class variables
         self.dt: float = 0
+        self.water_update_timer = 0
+        self.WATER_UPDATE_INTERVAL = 1 / 10
 
         # Init a camera object
         self.camera = Camera()
@@ -72,6 +75,10 @@ class Game:
         self.crafting_menu = CraftingMenu(self.drawer.SCREEN_WIDTH, self.drawer.SCREEN_HEIGHT)
         self.crafting_menu_open = False
 
+        # Initialize sound system
+        self.sounds = Sounds()
+        self.sounds.play_ambient()  # Start playing ambient sound
+
         # Tracks game fps
         self.fps: int = 0
 
@@ -99,15 +106,21 @@ class Game:
         # Load or unload chunks as needed based on player position
         load_chunks(self.chunk_list, self.player)
 
+        # Update water blocks
+        self.water_update_timer += self.dt
+        if self.water_update_timer >= self.WATER_UPDATE_INTERVAL:
+            WaterSimulation.update_water(self.chunk_list)
+            self.water_update_timer = 0
+
         # Get current mouse position for block highlighting
         mouse_pos = (self.mouse.x, self.mouse.y)
 
         # Render the current frame
         self.drawer.render_frame(
-            self.player, 
-            self.chunk_list, 
-            self.fps, 
-            self.inventory, 
+            self.player,
+            self.chunk_list,
+            self.fps,
+            self.inventory,
             mouse_pos,
             self.crafting_menu if self.crafting_menu_open else None
         )
@@ -129,7 +142,6 @@ class Game:
         self.keyboard.update()
 
         # Toggle crafting menu when E is pressed
-
         if self.keyboard.e_pressed:
             self.crafting_menu_open = not self.crafting_menu_open
             # Update crafting menu when opened
@@ -161,11 +173,25 @@ class Game:
             elif self.keyboard.key_9:
                 self.inventory.select_block(8)
 
+            # Update player direction
             if self.keyboard.a or self.keyboard.left:
                 self.player.facingLeft = True
 
             if self.keyboard.d or self.keyboard.right:
                 self.player.facingLeft = False
+
+            # Play running sounds if player is moving
+            is_moving = (self.keyboard.a or self.keyboard.left or 
+                         self.keyboard.d or self.keyboard.right)
+
+            if is_moving and self.player.grounded:
+                # Get the surface type the player is standing on
+                chunks_to_check = self.player._get_chunks_to_check(self.chunk_list)
+                surface_type = self.player.get_surface_type(chunks_to_check)
+
+                # Play the appropriate running sound based on surface type
+                if surface_type:
+                    self.sounds.play_run(surface_type)
 
     def handle_block_interaction(self) -> None:
         """
@@ -188,9 +214,16 @@ class Game:
                 self.camera, self.chunk_list, self.player
             )
 
-            # If a block was broken, add it to the inventory
+            # If a block was broken, add it to the inventory and play sound
             if block_type and block_type != 0:  # 0 is AIR
                 self.inventory.add_block(block_type)
+
+                # Determine the surface type for the sound
+                from world.Block import GRASS, DIRT
+                if block_type in [GRASS, DIRT]:
+                    self.sounds.play_mine("grass/dirt")
+                else:
+                    self.sounds.play_mine("blocks")
 
         # Handle block placing (left click)
         if self.mouse.left_click_event:
@@ -217,6 +250,8 @@ class Game:
         and processing events each frame.
         """
         while True:
+            # Test scrolling manually
+
             # Reset mouse click events at the beginning of each frame
             if self.mouse:
                 self.mouse.reset_click_events()
@@ -241,16 +276,13 @@ class Game:
                     self.mouse.handle_events(event)
 
                 # Handle crafting menu events when the menu is open
-                if self.crafting_menu_open and event.type == pg.MOUSEBUTTONDOWN:
-
+                if self.crafting_menu_open:
                     recipe = self.crafting_menu.handle_event(event)
-                    print(recipe)
-                    # Craft the item
                     if recipe:
-                        # Use CraftingRecipes.craft_item to craft the item
-                        CraftingRecipes.craft_item(recipe, self.inventory)
-                        # Update the crafting menu to reflect the new inventory state
-                        self.crafting_menu.update(self.inventory)
+                        # Craft the item
+                        if CraftingRecipes.craft_item(recipe, self.inventory):
+                            # Update the crafting menu after crafting
+                            self.crafting_menu.update(self.inventory)
 
             # Update the game
             self.update()

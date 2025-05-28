@@ -3,7 +3,7 @@ import math
 from typing import List, Union, Any, Optional
 import pygame as pg
 
-from world.Block import Block, BLOCK_SIZE, AIR, OAK_LOG, LEAVES, POPPY, PUMPKIN
+from world.Block import Block, BLOCK_SIZE, AIR, OAK_LOG, LEAVES, POPPY, PUMPKIN, WATER, GRASS, DIRT, STONE
 from rendering import SpriteManager
 
 # Number of blocks per chunk
@@ -16,6 +16,11 @@ POPPY_CHANCE = 0.03
 PUMPKIN_CHANCE = 0.03
 MIN_TREE_TRUNK_HEIGHT = 4
 MAX_TREE_TRUNK_HEIGHT = 6
+
+# Pond generation constants
+POND_CHANCE = 0.05  # 5% chance to generate a pond
+POND_MIN_SIZE = 3
+POND_MAX_SIZE = 8
 
 
 class Chunk:
@@ -82,6 +87,12 @@ class Chunk:
 
             if random.random() < PUMPKIN_CHANCE:
                 self.place_pumpkin(x, height + 27)
+                continue
+
+            # Generate ponds occasionally
+            if random.random() < POND_CHANCE and x > POND_MAX_SIZE and x < CHUNK_WIDTH - POND_MAX_SIZE:
+                # Place pond at grass level
+                self.generate_pond(x, height + 26)
                 continue
 
     def place_tree(self, x: int, y: int) -> None:
@@ -165,7 +176,64 @@ class Chunk:
         self.blocks[y][x] = Block(x * BLOCK_SIZE + self.offset, y * BLOCK_SIZE, POPPY)
 
     def place_pumpkin(self, x, y):
-        self.blocks[y][x] = Block(x * BLOCK_SIZE + self.offset, y * BLOCK_SIZE, PUMPKIN )
+        self.blocks[y][x] = Block(x * BLOCK_SIZE + self.offset, y * BLOCK_SIZE, PUMPKIN)
+
+    def generate_pond(self, center_x: int, center_y: int) -> None:
+        """
+        Generate a small pond of water at the specified coordinates.
+
+        Args:
+            center_x: The x-coordinate of the center of the pond.
+            center_y: The y-coordinate of the center of the pond.
+        """
+        # Determine pond size
+        pond_size = random.randint(POND_MIN_SIZE, POND_MAX_SIZE)
+
+        # Keep track of blocks that are part of the pond
+        pond_blocks = set()
+
+        # Start with the center block
+        pond_blocks.add((center_x, center_y))
+
+        # Keep track of potential expansion points
+        frontier = [(center_x, center_y)]
+
+        # Directions for expansion (including diagonals)
+        directions = [
+            (-1, -1), (-1, 0), (-1, 1),
+            (0, -1),           (0, 1),
+            (1, -1),  (1, 0),  (1, 1)
+        ]
+
+        # Generate the pond
+        while len(pond_blocks) < pond_size and frontier:
+            # Get a random point from the frontier
+            x, y = frontier.pop(random.randint(0, len(frontier) - 1))
+
+            # Check if we can place water here (must be above stone level)
+            if (0 <= x < CHUNK_WIDTH and 0 <= y < CHUNK_HEIGHT and 
+                    isinstance(self.blocks[y][x], Block) and 
+                    self.blocks[y][x].block_type in [GRASS, DIRT]):
+                # Replace block with water
+                self.blocks[y][x] = Block(
+                    x * BLOCK_SIZE + self.offset,
+                    y * BLOCK_SIZE,
+                    WATER
+                )
+
+                # Add neighboring blocks to the frontier
+                for dx, dy in directions:
+                    nx, ny = x + dx, y + dy
+                    if (nx, ny) not in pond_blocks and (nx, ny) not in frontier:
+                        # Higher chance to expand to adjacent blocks than diagonal ones
+                        if dx == 0 or dy == 0:
+                            if random.random() < 0.7:  # 70% chance for adjacent
+                                frontier.append((nx, ny))
+                                pond_blocks.add((nx, ny))
+                        else:
+                            if random.random() < 0.3:  # 30% chance for diagonal
+                                frontier.append((nx, ny))
+                                pond_blocks.add((nx, ny))
 
 
 def calculate_player_position(player: Any) -> int:

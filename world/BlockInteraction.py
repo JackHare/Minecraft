@@ -9,7 +9,8 @@ from typing import List, Any, Optional, Tuple
 
 import pygame as pg
 
-from world.Block import Block, AIR, BLOCK_SIZE, BEDROCK, STONE, COBBLE_STONE
+from world.Block import Block, AIR, BLOCK_SIZE, BEDROCK, STONE, COBBLE_STONE, WATER
+from world.WaterSimulation import WaterSimulation
 from world.Chunk import CHUNK_WIDTH, CHUNK_HEIGHT
 
 
@@ -132,6 +133,32 @@ class BlockInteraction:
         # Store the block type before breaking it
         broken_block_type = block.block_type
 
+        # Special handling for water blocks
+        if broken_block_type == WATER:
+            # Check if this is a source block
+            is_source = block.water_distance == 0
+
+            if is_source:
+                # If it's a source block, remove all connected water blocks first
+                WaterSimulation.remove_connected_water(chunk, block_x, block_y, chunk_list)
+                # Then replace the source block with air
+                chunk.blocks[block_y][block_x] = Block(
+                    block_x * BLOCK_SIZE + chunk.offset,
+                    block_y * BLOCK_SIZE,
+                    AIR
+                )
+                # Return WATER to add to inventory
+                return WATER
+            else:
+                # For non-source water blocks, just remove the single block
+                chunk.blocks[block_y][block_x] = Block(
+                    block_x * BLOCK_SIZE + chunk.offset,
+                    block_y * BLOCK_SIZE,
+                    AIR
+                )
+                # Non-source water blocks don't give water
+                return AIR
+
         # If block was stone, give back cobble stone instead
         if broken_block_type == STONE:
             broken_block_type = COBBLE_STONE
@@ -188,11 +215,15 @@ class BlockInteraction:
             (block_y == player_block_y or block_y == player_block_y_bottom)):
             return False
 
-        # Place the block
-        chunk.blocks[block_y][block_x] = Block(
-            block_x * BLOCK_SIZE + chunk.offset,
-            block_y * BLOCK_SIZE,
-            block_type
-        )
+        # Handle water blocks specially
+        if block_type == WATER:
+            WaterSimulation.place_water_source(chunk, block_x, block_y)
+        else:
+            # Place a regular block
+            chunk.blocks[block_y][block_x] = Block(
+                block_x * BLOCK_SIZE + chunk.offset,
+                block_y * BLOCK_SIZE,
+                block_type
+            )
 
         return True

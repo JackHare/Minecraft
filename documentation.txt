@@ -1,0 +1,473 @@
+# Minecraft 2D Game Documentation
+
+This document provides detailed documentation for the Minecraft 2D game project, including descriptions of all files, classes, methods, and important constants.
+
+## Table of Contents
+1. [Main Files](#main-files)
+2. [Engine](#engine)
+3. [Entity](#entity)
+4. [Input](#input)
+5. [Rendering](#rendering)
+6. [World](#world)
+
+## Main Files
+
+### Game.py
+**Purpose**: Main game class that orchestrates all game components and the game loop.
+
+**Classes**:
+- **Game**: Manages the game state, updates, and rendering.
+  - **Attributes**:
+    - `dt` (float): Delta time between frames in seconds.
+    - `water_update_timer` (float): Timer for water updates.
+    - `WATER_UPDATE_INTERVAL` (float): Interval between water updates.
+    - `camera` (Camera): The camera that determines the view position.
+    - `drawer` (Drawer): The renderer for drawing the game world.
+    - `keyboard` (Keyboard): The keyboard input handler.
+    - `mouse` (Mouse): The mouse input handler.
+    - `chunk_list` (List[Chunk]): List of chunks that make up the game world.
+    - `player` (Player): The player entity controlled by the user.
+    - `clock` (pg.time.Clock): The game clock for timing and FPS calculation.
+    - `gravity` (Gravity): The gravity physics component for the player.
+    - `inventory` (Inventory): The player's inventory.
+    - `crafting_menu` (CraftingMenu): The crafting menu UI.
+    - `crafting_menu_open` (bool): Whether the crafting menu is open.
+    - `sounds` (Sounds): The sound system.
+    - `fps` (int): Current frames per second.
+
+  - **Methods**:
+    - `__init__(self) -> None`: Initialize the game and all its components.
+    - `update(self) -> None`: Update the game state for one frame. Handles input processing, physics updates, camera positioning, world loading, and rendering.
+    - `control_updates(self) -> None`: Process input and update player movement and physics. Calculates delta time for the current frame and delegates input handling.
+    - `handle_block_interaction(self) -> None`: Handle block breaking and placing based on mouse input. Checks for mouse clicks and calls the appropriate BlockInteraction methods.
+    - `main_loop(self) -> None`: Main game loop that runs continuously until the game is exited. Handles the game's main loop, updating the game state and processing events each frame.
+
+### Main.py
+**Purpose**: Main entry point for the Minecraft 2D game.
+
+**Functions**:
+- `main() -> None`: Initialize and start the game. Creates a new Game instance and starts the main game loop.
+
+## Engine
+
+### Update.py
+**Purpose**: Handles player movement and physics updates.
+
+**Constants**:
+- `MOVEMENT_SPEED` (float): Player movement speed in pixels per second.
+- `WATER_MOVEMENT_SPEED` (float): Player movement speed in water (pixels per second).
+
+**Functions**:
+- `update_input(dt: float, keyboard: 'Keyboard', player: 'Player', gravity: 'Gravity') -> None`: Process input and update player movement and physics. Handles keyboard input for player movement and applies gravity physics.
+
+## Entity
+
+### Camera.py
+**Purpose**: Manages the camera view for the game.
+
+**Classes**:
+- **Camera**: Represents a 2D camera system for managing a viewing area.
+  - **Attributes**:
+    - `TILE_SIZE` (int): Size of a tile in pixels.
+    - `VIEW_TILES_WIDTH` (float): Number of tiles visible horizontally.
+    - `VIEW_TILES_HEIGHT` (float): Number of tiles visible vertically.
+    - `DEFAULT_VIEW_WIDTH` (int): Default width of the view in pixels.
+    - `DEFAULT_VIEW_HEIGHT` (int): Default height of the view in pixels.
+    - `x` (float): The x-coordinate of the camera.
+    - `y` (float): The y-coordinate of the camera.
+    - `view_width` (int): The width of the camera view.
+    - `view_height` (int): The height of the camera view.
+
+  - **Methods**:
+    - `_calculate_bound(self, position: float, size: float) -> float`: Helper method to calculate boundary position.
+    - `left_bound(self) -> float`: Get the left boundary of the camera view.
+    - `right_bound(self) -> float`: Get the right boundary of the camera view.
+    - `top_bound(self) -> float`: Get the top boundary of the camera view.
+    - `bottom_bound(self) -> float`: Get the bottom boundary of the camera view.
+    - `set_center_position(self, x: float, y: float) -> None`: Sets camera position relative to the top-left boundary.
+    - `center_on_player(self, player: Any) -> None`: Centers the view or camera on the specified player.
+
+### Entity.py
+**Purpose**: Base class for all game entities.
+
+**Classes**:
+- **Entity**: Base class for all game entities.
+  - **Attributes**:
+    - `x` (float): The x-coordinate of the entity in the game world.
+    - `y` (float): The y-coordinate of the entity in the game world.
+    - `width` (int): The width of the entity in pixels.
+    - `height` (int): The height of the entity in pixels.
+    - `type` (str): The type of the entity, used for loading the appropriate sprite.
+    - `image` (pygame.Surface): The sprite image for the entity.
+    - `rect` (pygame.Rect): The rectangle representing the entity's position and size.
+
+  - **Methods**:
+    - `__init__(self, x: float, y: float, width: int, height: int, type: str) -> None`: Initialize a new Entity.
+    - `render(self, screen: pg.Surface, camera: Any) -> None`: Render the entity on the screen.
+
+### Gravity.py
+**Purpose**: Handles gravity physics for entities in the game.
+
+**Classes**:
+- **Gravity**: Handles gravity physics for entities.
+  - **Attributes**:
+    - `GRAVITY_ACCELERATION` (float): Acceleration due to gravity in pixels/second².
+    - `TERMINAL_VELOCITY` (float): Maximum falling speed in pixels/second.
+    - `GROUND_FRICTION` (float): Friction coefficient when entity is on ground.
+    - `JUMP_VELOCITY` (float): Initial upward velocity when jumping in pixels/second.
+    - `player` (Any): The entity affected by gravity.
+    - `game` (Any): The game instance.
+    - `vertical_velocity` (float): Current vertical velocity in pixels/second.
+    - `is_grounded` (bool): Whether the entity is on the ground.
+    - `can_jump` (bool): Whether the entity can jump.
+
+  - **Methods**:
+    - `__init__(self, player: Any, game: Any) -> None`: Initialize the gravity physics for an entity.
+    - `apply_gravity(self, dt: float) -> None`: Apply gravity to the entity for the current frame.
+    - `jump(self, dt: float) -> None`: Make the entity jump.
+
+### Hitbox.py
+**Purpose**: Handles collision detection and physics for entities.
+
+**Classes**:
+- **Hitbox**: Represents a physical entity with collision detection.
+  - **Attributes**:
+    - `chunk_x` (int): The x-coordinate within the current chunk.
+    - `chunk_y` (int): The y-coordinate within the current chunk.
+    - `x_change` (float): The target x-coordinate for movement.
+    - `y_change` (float): The target y-coordinate for movement.
+    - `mass` (float): The mass of the entity for physics calculations.
+    - `friction_coefficient` (float): The friction coefficient for physics calculations.
+    - `grounded` (bool): Whether the entity is on the ground.
+    - `in_water` (bool): Whether the entity is in water.
+
+  - **Methods**:
+    - `__init__(self, x: float, y: float, width: int, height: int, type: str, mass: float = 1.0, friction_coefficient: float = 0.5) -> None`: Initialize a new Hitbox entity.
+    - `update_player_position(self, chunk_list: List[Any]) -> None`: Update the entity's position based on physics and collisions.
+    - `_get_chunks_to_check(self, chunk_list: List[Any]) -> Tuple[Any, Any, Any]`: Determine which chunks to check for collisions.
+    - `_find_colliding_blocks(self, chunks: Tuple[Any, Any, Any]) -> List[Any]`: Find blocks that the entity is colliding with.
+    - `_resolve_collisions(self, block_list: List[Any]) -> None`: Resolve collisions with blocks.
+    - `check_collision(self, block: Any, x: float, y: float) -> bool`: Check if the entity collides with a block at the given position.
+    - `_check_if_in_water(self, chunks: Tuple[Any, Any, Any]) -> bool`: Check if the entity is in water.
+    - `get_surface_type(self, chunks: Tuple[Any, Any, Any]) -> str`: Determine the type of surface the entity is standing on.
+
+### Player.py
+**Purpose**: Represents the player character in the game.
+
+**Classes**:
+- **Player**: Represents the player character.
+  - **Attributes**:
+    - `image_copy` (pygame.Surface): A copy of the original player image.
+    - `facingLeft` (bool): Whether the player is facing left.
+    - `stillFacingLeft` (bool): Whether the player was facing left in the previous frame.
+
+  - **Methods**:
+    - `__init__(self) -> None`: Initialize a new Player entity.
+    - `render(self, screen: pg.Surface, camera: Any) -> None`: Render the player on the screen.
+
+## Input
+
+### Event.py
+**Purpose**: Handles event polling for the game.
+
+**Functions**:
+- `poll_events() -> List[pg.event.Event]`: Poll for pygame events and return them.
+
+### Keyboard.py
+**Purpose**: Handles keyboard input for the game.
+
+**Classes**:
+- **Keyboard**: Handles keyboard input.
+  - **Attributes**:
+    - `up` (bool): Whether the up arrow key is pressed.
+    - `down` (bool): Whether the down arrow key is pressed.
+    - `left` (bool): Whether the left arrow key is pressed.
+    - `right` (bool): Whether the right arrow key is pressed.
+    - `w` (bool): Whether the W key is pressed.
+    - `a` (bool): Whether the A key is pressed.
+    - `s` (bool): Whether the S key is pressed.
+    - `d` (bool): Whether the D key is pressed.
+    - `space` (bool): Whether the space bar is pressed.
+    - `key_1` through `key_9` (bool): Whether the number keys are pressed.
+    - `e` (bool): Whether the E key is pressed.
+    - `e_pressed` (bool): Whether the E key was just pressed this frame.
+    - `_e_was_pressed` (bool): Whether the E key was pressed in the previous frame.
+
+  - **Methods**:
+    - `__init__(self) -> None`: Initialize a new Keyboard input handler with all keys unpressed.
+    - `handle_events(self, event: pg.event.Event) -> None`: Handle keyboard events to update key states.
+    - `update(self) -> None`: Update the keyboard state for the current frame.
+
+### Mouse.py
+**Purpose**: Handles mouse input for the game.
+
+**Classes**:
+- **Mouse**: Handles mouse input.
+  - **Attributes**:
+    - `x` (int): The x-coordinate of the mouse cursor.
+    - `y` (int): The y-coordinate of the mouse cursor.
+    - `left_click` (bool): Whether the left mouse button is pressed.
+    - `right_click` (bool): Whether the right mouse button is pressed.
+    - `left_click_event` (bool): Whether the left mouse button was just clicked.
+    - `right_click_event` (bool): Whether the right mouse button was just clicked.
+
+  - **Methods**:
+    - `__init__(self) -> None`: Initialize a new Mouse input handler.
+    - `handle_events(self, event: pg.event.Event) -> None`: Handle mouse events to update mouse state.
+    - `reset_click_events(self) -> None`: Reset the click event flags.
+
+## Rendering
+
+### CraftingMenu.py
+**Purpose**: Provides the crafting menu interface for the game.
+
+**Classes**:
+- **CraftingMenu**: Handles the display and interaction with the crafting menu.
+  - **Attributes**:
+    - `MENU_BACKGROUND_COLOR` (Tuple[int, int, int, int]): The background color of the menu.
+    - `MENU_BORDER_COLOR` (Tuple[int, int, int]): The border color of the menu.
+    - `MENU_BORDER_WIDTH` (int): The width of the menu border.
+    - `BUTTON_BACKGROUND_COLOR` (Tuple[int, int, int]): The background color of buttons.
+    - `BUTTON_HOVER_COLOR` (Tuple[int, int, int]): The background color of buttons when hovered.
+    - `BUTTON_DISABLED_COLOR` (Tuple[int, int, int]): The background color of disabled buttons.
+    - `BUTTON_BORDER_COLOR` (Tuple[int, int, int]): The border color of buttons.
+    - `BUTTON_BORDER_WIDTH` (int): The width of button borders.
+    - `BUTTON_TEXT_COLOR` (Tuple[int, int, int]): The color of button text.
+    - `BUTTON_TEXT_DISABLED_COLOR` (Tuple[int, int, int]): The color of disabled button text.
+    - `TITLE_TEXT_COLOR` (Tuple[int, int, int]): The color of the menu title.
+    - `screen_width` (int): The width of the game screen.
+    - `screen_height` (int): The height of the game screen.
+    - `menu_width` (int): The width of the crafting menu.
+    - `menu_height` (int): The height of the crafting menu.
+    - `menu` (pm.Menu): The pygame_menu instance.
+    - `inventory` (Any): The player's inventory.
+    - `recipe_widgets` (List[Dict]): List of widgets for each recipe.
+
+  - **Methods**:
+    - `__init__(self, screen_width: int, screen_height: int) -> None`: Initialize the crafting menu.
+    - `update(self, inventory: Any) -> None`: Update the crafting menu state.
+    - `_on_widget_hover(self, widget_data: Dict, is_hover: bool) -> None`: Handle hover events for recipe widgets.
+    - `_on_widget_click(self, widget_data: Dict) -> None`: Handle click events for recipe widgets.
+    - `handle_event(self, event: pg.event.Event) -> Optional[Dict]`: Handle mouse events for the crafting menu.
+    - `draw(self, screen: pg.Surface) -> None`: Draw the crafting menu to the screen.
+
+### Drawer.py
+**Purpose**: Handles rendering of the game world.
+
+**Classes**:
+- **Sky**: Renders the sky background with clouds.
+  - **Attributes**:
+    - `width` (int): The width of the sky.
+    - `height` (int): The height of the sky.
+    - `clouds` (List[Dict]): List of cloud data.
+    - `cloud_image` (pg.Surface): The cloud image.
+    - `sky_color` (Tuple[int, int, int]): The color of the sky.
+
+  - **Methods**:
+    - `__init__(self, width: int, height: int) -> None`: Initialize the sky.
+    - `update(self, dt: float, camera_x: float) -> None`: Update the sky animation.
+    - `draw(self, screen: pg.Surface) -> None`: Draw the sky to the screen.
+
+- **Drawer**: Handles rendering of the game world.
+  - **Attributes**:
+    - `SCREEN_WIDTH` (int): The width of the screen.
+    - `SCREEN_HEIGHT` (int): The height of the screen.
+    - `BACKGROUND_COLOR` (Tuple[int, int, int]): The background color.
+    - `BLOCK_HIGHLIGHT_COLOR` (Tuple[int, int, int]): The color of the block highlight.
+    - `BLOCK_HIGHLIGHT_WIDTH` (int): The width of the block highlight.
+    - `DRAW_FPS` (bool): Whether to draw the FPS counter.
+    - `FPS_TEXT_COLOR` (Tuple[int, int, int]): The color of the FPS text.
+    - `FPS_POSITION` (Tuple[int, int]): The position of the FPS counter.
+    - `INVENTORY_BACKGROUND_COLOR` (Tuple[int, int, int, int]): The background color of the inventory.
+    - `INVENTORY_BORDER_COLOR` (Tuple[int, int, int]): The border color of the inventory.
+    - `INVENTORY_BORDER_WIDTH` (int): The width of the inventory border.
+    - `INVENTORY_SLOT_COLOR` (Tuple[int, int, int]): The color of inventory slots.
+    - `INVENTORY_SLOT_SELECTED_COLOR` (Tuple[int, int, int]): The color of the selected inventory slot.
+    - `INVENTORY_SLOT_BORDER_WIDTH` (int): The width of inventory slot borders.
+    - `INVENTORY_SLOT_SIZE` (int): The size of inventory slots.
+    - `INVENTORY_SLOT_SPACING` (int): The spacing between inventory slots.
+    - `INVENTORY_POSITION` (Tuple[int, int]): The position of the inventory.
+    - `screen` (pg.Surface): The screen surface.
+    - `camera` (Camera): The camera object.
+    - `sky` (Sky): The sky object.
+    - `font` (pg.font.Font): The font for text rendering.
+    - `last_time` (float): The time of the last frame.
+
+  - **Methods**:
+    - `__init__(self, camera: Any) -> None`: Initialize the drawer.
+    - `render_frame(self, player: Any, chunk_list: List[Any], fps: int, inventory: Optional[Any] = None, mouse_pos: Optional[Tuple[int, int]] = None, crafting_menu: Optional[Any] = None) -> None`: Draw a complete frame to the screen.
+    - `highlight_block_at_mouse(self, mouse_pos: Tuple[int, int], chunk_list: List[Any]) -> None`: Highlight the block that the mouse is hovering over.
+    - `draw_fps(self, fps: int) -> None`: Draw the FPS counter to the screen.
+    - `draw_inventory(self, inventory: Any) -> None`: Draw the inventory hotbar UI to the screen.
+
+### Sounds.py
+**Purpose**: Handles sound effects and music for the game.
+
+**Constants**:
+- `SOUNDS` (Dict[str, str]): Dictionary mapping sound names to file paths.
+
+**Classes**:
+- **Sounds**: Handles sound playback.
+  - **Attributes**:
+    - `sounds` (Dict[str, pygame.mixer.Sound]): Dictionary of loaded sound objects.
+
+  - **Methods**:
+    - `__init__(self) -> None`: Initialize the sound system.
+    - `play_ambient(self) -> None`: Play ambient background sound.
+    - `play_run(self, surface_type: str) -> None`: Play running sound based on surface type.
+    - `play_mine(self, surface_type: str) -> None`: Play mining sound based on surface type.
+    - `stop_all(self) -> None`: Stop all playing sounds.
+
+### SpriteManager.py
+**Purpose**: Manages loading and retrieving sprites for the game.
+
+**Constants**:
+- `block_sprites` (Dict[int, pg.Surface]): Dictionary to store loaded block sprites.
+- `SPRITE_PATHS` (Dict[int, str]): Dictionary mapping block types to sprite file paths.
+- `ENTITY_SPRITE_PATHS` (Dict[str, str]): Dictionary mapping entity types to sprite file paths.
+
+**Functions**:
+- `load_block_sprites() -> None`: Load all block sprites into memory.
+- `get_block_sprite(block_type: int) -> Optional[pg.Surface]`: Get the sprite for a specific block type.
+- `load_entity_sprite(entity_type: str) -> Optional[pg.Surface]`: Load and return the sprite for a specific entity type.
+
+## World
+
+### Block.py
+**Purpose**: Defines block types and block-related functionality.
+
+**Constants**:
+- `BLOCK_SIZE` (int): Size of a block in pixels.
+- Block type constants: `AIR`, `GRASS`, `DIRT`, `STONE`, etc.
+- Ore vein size ranges: `COAL_VEIN_SIZE`, `IRON_VEIN_SIZE`, etc.
+- Ore generation probabilities: `ORE_GENERATION_CHANCE`, `COAL_CHANCE`, etc.
+- Depth thresholds for ore generation: `COAL_DEPTH`, `IRON_DEPTH`, etc.
+
+**Classes**:
+- **Block**: Represents a block in the game world.
+  - **Attributes**:
+    - `x` (float): The x-coordinate of the block in the game world.
+    - `y` (float): The y-coordinate of the block in the game world.
+    - `width` (int): The width of the block in pixels.
+    - `height` (int): The height of the block in pixels.
+    - `block_type` (int): The type of the block, determining its appearance and behavior.
+    - `water_distance` (int): For water blocks, the distance from the source (0 for source blocks).
+
+  - **Methods**:
+    - `__init__(self, x: float, y: float, block_type: int, water_distance: int = 0) -> None`: Initialize a new Block.
+
+**Functions**:
+- `get_block_type(height: int, y: int, chunk_height: int = 192) -> int`: Determine the block type based on height and depth.
+- `generate_ore_vein(chunk: Any, ore_type: int, start_x: int, start_y: int, vein_size: Tuple[int, int], chunk_height: int) -> None`: Generate an ore vein starting from the given coordinates.
+- `place_ore_veins(chunk: Any, chunk_height: int) -> None`: Place ore veins throughout the chunk.
+
+### BlockInteraction.py
+**Purpose**: Handles block breaking and placing in the game world.
+
+**Classes**:
+- **BlockInteraction**: Handles block breaking and placing.
+  - **Attributes**:
+    - `MAX_REACH` (int): The maximum distance in blocks that the player can reach.
+
+  - **Methods**:
+    - `get_block_at_position(screen_x: int, screen_y: int, camera: Any, chunk_list: List[Any]) -> Tuple[Optional[Block], Optional[Any], int, int]`: Get the block at the specified screen position.
+    - `is_within_reach(player: Any, block_x: int, block_y: int, chunk: Any) -> bool`: Check if a block is within reach of the player.
+    - `break_block(mouse_x: int, mouse_y: int, camera: Any, chunk_list: List[Any], player: Any) -> int`: Break the block at the specified screen position.
+    - `place_block(mouse_x: int, mouse_y: int, camera: Any, chunk_list: List[Any], player: Any, block_type: int) -> bool`: Place a block at the specified screen position.
+
+### Chunk.py
+**Purpose**: Manages chunks of the game world.
+
+**Constants**:
+- `CHUNK_WIDTH` (int): Number of blocks per chunk horizontally.
+- `CHUNK_HEIGHT` (int): Number of blocks per chunk vertically.
+- `TREE_CHANCE` (float): Probability of generating a tree.
+- `POPPY_CHANCE` (float): Probability of generating a poppy.
+- `PUMPKIN_CHANCE` (float): Probability of generating a pumpkin.
+- `MIN_TREE_TRUNK_HEIGHT` (int): Minimum height of tree trunks.
+- `MAX_TREE_TRUNK_HEIGHT` (int): Maximum height of tree trunks.
+- `POND_CHANCE` (float): Probability of generating a pond.
+- `POND_MIN_SIZE` (int): Minimum size of ponds.
+- `POND_MAX_SIZE` (int): Maximum size of ponds.
+
+**Classes**:
+- **Chunk**: Represents a chunk of the game world.
+  - **Attributes**:
+    - `blocks` (List[List[Block]]): 2D grid of blocks in the chunk.
+    - `position` (int): The horizontal position of the chunk in the world.
+    - `offset` (int): The pixel offset of the chunk from the world origin.
+
+  - **Methods**:
+    - `__init__(self, position: int) -> None`: Initialize a new Chunk.
+    - `generate_chunks(self) -> None`: Generate the terrain in the chunk.
+    - `place_tree(self, x: int, y: int) -> None`: Place a tree at the specified coordinates.
+    - `render_chunk(self, screen: pg.Surface, camera: Any) -> None`: Render the chunk to the screen.
+    - `place_poppy(self, x: int, y: int) -> None`: Place a poppy at the specified coordinates.
+    - `place_pumpkin(self, x: int, y: int) -> None`: Place a pumpkin at the specified coordinates.
+    - `generate_pond(self, center_x: int, center_y: int) -> None`: Generate a small pond of water at the specified coordinates.
+
+**Functions**:
+- `calculate_player_position(player: Any) -> int`: Calculate the chunk position that the player is in.
+
+### CraftingRecipes.py
+**Purpose**: Defines crafting recipes and crafting-related functionality.
+
+**Constants**:
+- `RECIPES` (List[Dict]): List of crafting recipes.
+
+**Functions**:
+- `can_craft(recipe: Dict, inventory: Any) -> bool`: Check if a recipe can be crafted with the current inventory.
+- `craft_item(recipe: Dict, inventory: Any) -> bool`: Craft an item by consuming the required materials and adding the result.
+- `get_available_recipes(inventory: Any) -> List[Dict]`: Get a list of recipes that can be crafted with the current inventory.
+- `get_all_recipes() -> List[Dict]`: Get a list of all available recipes.
+
+### Inventory.py
+**Purpose**: Manages the player's block selection and inventory.
+
+**Classes**:
+- **Inventory**: Manages the player's block selection and inventory.
+  - **Attributes**:
+    - `AVAILABLE_BLOCKS` (List[int]): List of block types that can be collected.
+    - `collected_blocks` (Dict[int, int]): Dictionary mapping block types to quantities.
+    - `selected_block` (int): The currently selected block type.
+    - `selected_index` (int): The index of the currently selected block in the hotbar.
+
+  - **Methods**:
+    - `__init__(self) -> None`: Initialize a new Inventory with no blocks collected.
+    - `add_block(self, block_type: int, quantity: int = 1) -> None`: Add blocks to the inventory.
+    - `remove_block(self, block_type: int, quantity: int = 1) -> bool`: Remove blocks from the inventory.
+    - `has_block(self, block_type: int) -> bool`: Check if the inventory has at least one of the specified block type.
+    - `get_block_count(self, block_type: int) -> int`: Get the number of blocks of the specified type in the inventory.
+    - `select_block(self, index: int) -> None`: Select a block by index.
+    - `select_next_block(self) -> None`: Select the next block in the inventory.
+    - `select_previous_block(self) -> None`: Select the previous block in the inventory.
+    - `get_selected_block(self) -> int`: Get the currently selected block type.
+    - `get_collected_blocks(self) -> List[int]`: Get a list of all collected block types.
+    - `_update_selected_block(self) -> None`: Update the selected block based on available blocks.
+
+### WaterSimulation.py
+**Purpose**: Handles water flow behavior in the game world.
+
+**Classes**:
+- **WaterSimulation**: Handles water flow behavior.
+  - **Attributes**:
+    - `MAX_WATER_LEVEL` (int): The maximum level of water (for partial blocks).
+    - `FLOW_RATE` (int): The rate at which water flows (blocks per update).
+    - `EVAPORATION_CHANCE` (float): The chance of water evaporating when isolated.
+    - `ENABLE_EVAPORATION` (bool): Whether water can evaporate.
+    - `MAX_SPREAD_DISTANCE` (int): The maximum distance water can spread from its source.
+
+  - **Methods**:
+    - `update_water(chunk_list: List[Any]) -> None`: Update all water blocks in the chunks.
+    - `_update_chunk_water(chunk: Any, chunk_list: List[Any], updated_blocks: Set[Tuple[int, int, int]]) -> None`: Update water blocks in a single chunk.
+    - `_flow_downward(chunk: Any, x: int, y: int, chunk_list: List[Any], updated_blocks: Set[Tuple[int, int, int]]) -> bool`: Try to flow water downward.
+    - `_flow_sideways(chunk: Any, x: int, y: int, chunk_list: List[Any], updated_blocks: Set[Tuple[int, int, int]]) -> None`: Try to flow water sideways.
+    - `_check_evaporation(chunk: Any, x: int, y: int, chunk_list: List[Any]) -> None`: Check if a water block should evaporate.
+    - `place_water_source(chunk: Any, x: int, y: int) -> None`: Place a water source block at the specified coordinates.
+    - `remove_connected_water(chunk: Any, x: int, y: int, chunk_list: List[Any]) -> None`: Remove all water blocks connected to the specified water block.
+
+### World.py
+**Purpose**: Manages the game world, including chunk loading and unloading.
+
+**Functions**:
+- `load_chunks(chunk_list: List[Chunk], player: Any) -> None`: Load and unload chunks based on player position.
